@@ -370,7 +370,7 @@ class HumanizerEngine:
         if HAS_TEXTHUMANIZE and mode == "ultra_stealth" and intensity >= 80:
             try:
                 # Run light touch texthumanize to break remaining statistical watermarks
-                ash_res = texthumanize.ash_humanize(current_text, preset="light")
+                ash_res = texthumanize.ash_humanize(current_text, lang="en", preset="light")
                 if ash_res and hasattr(ash_res, 'text') and len(ash_res.text) > len(current_text) * 0.6:
                     current_text = ash_res.text
                     changes_applied.append("Adaptive Signature Humanization (ASH) layer applied")

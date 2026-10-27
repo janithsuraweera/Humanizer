@@ -12,7 +12,7 @@ def run_tests():
     # 1. Test homepage
     r = client.get('/')
     assert r.status_code == 200, f"Status {r.status_code}"
-    assert "HUMANIZE STUDIO" in r.text
+    assert "humanize studio" in r.text.lower()
     print("✓ GET / homepage OK")
 
     # 2. Test text humanize

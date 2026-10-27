@@ -3,146 +3,186 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Humanizer Studio - 100% Free Document & Batch Stealth Tool</title>
+  <title>Humanize Studio — Document Paraphrasing & Detection Bypass Suite</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <div class="app-container">
+  <div class="app-shell">
     
-    <!-- Top Header -->
-    <header class="app-header">
-      <div class="logo-wrapper">
-        <div class="logo-icon">✨</div>
+    <!-- Top Navigation & Brand Header -->
+    <header class="top-bar">
+      <div class="brand-section">
+        <div class="brand-glyph">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+        </div>
         <div>
-          <div style="display: flex; align-items: center;">
-            <h1 class="logo-title">HUMANIZE STUDIO</h1>
-            <span class="logo-badge">100% FREE</span>
+          <div class="brand-title">
+            <span>Humanize Studio</span>
+            <span class="brand-badge">PRO v2.4</span>
           </div>
-          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
-            Undetectable AI Rewriter & Batch Document Bypass (Turnitin, GPTZero, ZeroGPT)
-          </p>
+          <p class="brand-subtitle">Linguistic Variational & Document Stealth Pipeline</p>
         </div>
       </div>
 
-      <div class="header-status">
-        <div class="status-chip">
-          <span class="status-dot"></span>
-          <span>Offline Stealth Engine: Ready</span>
+      <div class="top-bar-meta">
+        <div class="engine-status-pill">
+          <span class="status-dot-pulse"></span>
+          <span>Offline Core Active</span>
         </div>
       </div>
     </header>
 
-    <!-- Navigation Tabs -->
-    <nav class="tabs-nav" id="mainTabsNav">
+    <!-- Segmented Tab Navigation -->
+    <nav class="nav-segmented-track" id="mainTabsNav">
       <button class="tab-btn active" data-tab="tab-batch" id="tabBtnBatch">
-        📁 Batch Documents (.docx, .pdf, .txt)
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
+        </svg>
+        <span>Batch Documents</span>
       </button>
+
       <button class="tab-btn" data-tab="tab-single" id="tabBtnSingle">
-        📄 Single Document
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <span>Single Document</span>
       </button>
+
       <button class="tab-btn" data-tab="tab-editor" id="tabBtnEditor">
-        ✍️ Live Text Editor
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+        <span>Interactive Editor</span>
       </button>
+
       <button class="tab-btn" data-tab="tab-detector" id="tabBtnDetector">
-        📊 AI Detector Scanner
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        <span>Forensic Scanner</span>
       </button>
+
       <button class="tab-btn" data-tab="tab-settings" id="tabBtnSettings">
-        ⚙️ Settings & Engine
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <span>Preferences</span>
       </button>
     </nav>
 
-    <!-- TAB 1: BATCH DOCUMENTS (PRIMARY REQUEST) -->
+    <!-- TAB 1: BATCH PROCESSING -->
     <section class="tab-content active" id="tab-batch">
-      <div class="glass-card">
-        <div class="card-header">
-          <div>
-            <h2 class="card-title">📁 Multi-Document Batch Humanizer</h2>
-            <p class="card-subtitle">
-              ඔබේ Documents එකපාර මෙතනට දාලා එක click එකකින් 100% Humanize කරගන්න (.docx, .pdf, .txt).
-            </p>
+      <div class="surface-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">Batch Document Processing</h2>
+          <p class="panel-description">Upload multiple manuscripts or documents to process concurrently with structure and style preservation.</p>
+        </div>
+
+        <!-- Upload Dropzone -->
+        <div class="upload-dropzone" id="batchDropzone">
+          <div class="dropzone-icon-box">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
           </div>
-        </div>
-
-        <!-- Batch Dropzone -->
-        <div class="dropzone" id="batchDropzone">
-          <div class="dropzone-icon">📂</div>
-          <h3 class="dropzone-title">Drag & Drop Multiple Files Here</h3>
-          <p class="dropzone-desc">Select Word (.docx), PDF (.pdf), or Text (.txt, .md) documents at once</p>
+          <div class="dropzone-heading">Drop document files here to queue</div>
+          <div class="dropzone-subtext">Click to browse local files or drop multiple documents simultaneously</div>
+          <div class="format-tags">
+            <span class="format-tag">.DOCX</span>
+            <span class="format-tag">.PDF</span>
+            <span class="format-tag">.TXT</span>
+            <span class="format-tag">.MD</span>
+          </div>
           <input type="file" id="batchFileInput" class="file-input" multiple accept=".docx,.pdf,.txt,.md">
-          <button class="btn-secondary" style="margin-top: 14px;" onclick="document.getElementById('batchFileInput').click()">
-            Browse Files
-          </button>
         </div>
 
-        <!-- Files List & Queue -->
+        <!-- Queue Section -->
         <div id="batchQueueContainer" style="display: none; margin-top: 24px;">
-          <h4 style="font-weight: 700; margin-bottom: 12px; display: flex; justify-content: space-between;">
-            <span>Selected Files (<span id="batchCount">0</span>)</span>
-            <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" id="btnClearBatch">Clear All</button>
-          </h4>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span style="font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary);">
+              Queued Files (<span id="batchCount">0</span>)
+            </span>
+            <button class="btn-secondary" style="padding: 4px 10px; font-size: 0.78rem;" id="btnClearBatch">Clear Queue</button>
+          </div>
           <div class="file-queue" id="batchFileList"></div>
 
-          <!-- Controls for Batch -->
-          <div class="controls-grid" style="margin-top: 20px;">
-            <div class="control-group">
-              <label class="control-label">Humanization Mode</label>
-              <select class="select-input" id="batchMode">
-                <option value="ultra_stealth">⚡ Ultra Stealth (Turnitin & GPTZero Bypass)</option>
-                <option value="academic">🎓 Academic Scholar (Thesis & University Papers)</option>
-                <option value="fluent_human">🌿 Fluent Human (Natural & Balanced)</option>
-                <option value="creative">🎨 Creative & Engaging</option>
+          <!-- Parameter Controls -->
+          <div class="parameters-bar">
+            <div class="field-group">
+              <label class="field-label" for="batchMode">Linguistic Variation Profile</label>
+              <select class="select-control" id="batchMode">
+                <option value="ultra_stealth">Ultra Stealth (Adversarial Entropy & Burstiness)</option>
+                <option value="academic">Academic Scholar (Scholarly Register & Low Redundancy)</option>
+                <option value="fluent_human">Fluent Human (Balanced Cadence & Contractions)</option>
+                <option value="creative">Creative Non-Fiction (Varied Rhythm)</option>
               </select>
             </div>
 
-            <div class="control-group">
-              <label class="control-label">
-                <span>Burstiness & Intensity</span>
-                <span id="batchIntensityLabel">75%</span>
-              </label>
-              <input type="range" class="range-slider" id="batchIntensity" min="40" max="100" value="75">
+            <div class="field-group">
+              <div class="field-label">
+                <span>Burstiness Intensity</span>
+                <span class="field-value-pill" id="batchIntensityLabel">75%</span>
+              </div>
+              <input type="range" class="slider-control" id="batchIntensity" min="40" max="100" value="75">
             </div>
           </div>
 
           <!-- Progress Bar -->
-          <div class="progress-bar-container" id="batchProgressContainer">
-            <div class="progress-bar-fill" id="batchProgressFill"></div>
+          <div class="progress-container" id="batchProgressContainer">
+            <div class="progress-fill" id="batchProgressFill"></div>
           </div>
 
-          <div style="display: flex; gap: 14px; margin-top: 20px; align-items: center;">
+          <div style="display: flex; gap: 14px; margin-top: 22px; align-items: center;">
             <button class="btn-primary" id="btnStartBatch">
-              🚀 Humanize All Documents Now
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              <span>Execute Batch Pipeline</span>
             </button>
-            <span id="batchStatusText" style="font-size: 0.9rem; color: var(--text-muted);"></span>
+            <span id="batchStatusText" style="font-size: 0.85rem; color: var(--text-secondary);"></span>
           </div>
 
-          <!-- Results Summary & ZIP Download -->
-          <div id="batchResultsArea" style="display: none; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <!-- Batch Results Table -->
+          <div class="batch-results-wrapper" id="batchResultsArea" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
               <div>
-                <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--accent-emerald);">
-                  🎉 Batch Processing Complete!
-                </h3>
-                <p style="font-size: 0.85rem; color: var(--text-muted);">All documents have been restructured and humanized.</p>
+                <h3 style="font-size: 0.95rem; font-weight: 600; color: var(--color-success);">Pipeline Execution Complete</h3>
+                <p style="font-size: 0.8rem; color: var(--text-tertiary); margin-top: 1px;">Processed manuscripts have been recompiled into clean Word documents.</p>
               </div>
               <a id="btnDownloadBatchZip" class="btn-success" href="#" target="_blank">
-                📦 Download All as ZIP (.zip)
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>Download Archive (.ZIP)</span>
               </a>
             </div>
 
-            <table class="batch-table" id="batchResultsTable">
-              <thead>
-                <tr>
-                  <th>Original Document</th>
-                  <th>Output Document</th>
-                  <th>Word Count</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody id="batchResultsBody"></tbody>
-            </table>
+            <div class="data-table-container">
+              <table class="data-table" id="batchResultsTable">
+                <thead>
+                  <tr>
+                    <th>Source Document</th>
+                    <th>Processed Output</th>
+                    <th>Word Count</th>
+                    <th>Integrity Status</th>
+                  </tr>
+                </thead>
+                <tbody id="batchResultsBody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -150,75 +190,91 @@
 
     <!-- TAB 2: SINGLE DOCUMENT -->
     <section class="tab-content" id="tab-single">
-      <div class="glass-card">
-        <div class="card-header">
-          <div>
-            <h2 class="card-title">📄 Single Document Humanizer</h2>
-            <p class="card-subtitle">Upload a single Word document, PDF, or text file to rewrite and preserve styles.</p>
-          </div>
+      <div class="surface-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">Document Rewriter</h2>
+          <p class="panel-description">Transform a single Word document, PDF, or text file while retaining full heading hierarchy and table layouts.</p>
         </div>
 
-        <div class="dropzone" id="singleDropzone">
-          <div class="dropzone-icon">📑</div>
-          <h3 class="dropzone-title">Drop Your Document Here</h3>
-          <p class="dropzone-desc">Supported formats: .docx (Word), .pdf (PDF), .txt (Text)</p>
+        <div class="upload-dropzone" id="singleDropzone">
+          <div class="dropzone-icon-box">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+          <div class="dropzone-heading">Select document to process</div>
+          <div class="dropzone-subtext">Drag and drop or click to browse</div>
+          <div class="format-tags">
+            <span class="format-tag">.DOCX</span>
+            <span class="format-tag">.PDF</span>
+            <span class="format-tag">.TXT</span>
+          </div>
           <input type="file" id="singleFileInput" class="file-input" accept=".docx,.pdf,.txt,.md">
-          <button class="btn-secondary" style="margin-top: 14px;" onclick="document.getElementById('singleFileInput').click()">
-            Choose File
-          </button>
         </div>
 
         <div id="singleFileSelectedArea" style="display: none; margin-top: 20px;">
           <div class="file-item">
             <div class="file-info">
-              <span style="font-size: 24px;">📄</span>
+              <span class="file-ext-badge">DOC</span>
               <div>
-                <div class="file-name" id="singleSelectedName">filename.docx</div>
+                <div class="file-name" id="singleSelectedName">document.docx</div>
                 <div class="file-size" id="singleSelectedSize">0 KB</div>
               </div>
             </div>
-            <button class="btn-secondary" id="btnCancelSingle">Remove</button>
-          </div>
-
-          <div class="controls-grid" style="margin-top: 20px;">
-            <div class="control-group">
-              <label class="control-label">Humanization Mode</label>
-              <select class="select-input" id="singleMode">
-                <option value="ultra_stealth">⚡ Ultra Stealth (Turnitin & GPTZero Bypass)</option>
-                <option value="academic">🎓 Academic Scholar</option>
-                <option value="fluent_human">🌿 Fluent Human</option>
-                <option value="creative">🎨 Creative</option>
-              </select>
-            </div>
-            <div class="control-group">
-              <label class="control-label">
-                <span>Intensity</span>
-                <span id="singleIntensityLabel">75%</span>
-              </label>
-              <input type="range" class="range-slider" id="singleIntensity" min="40" max="100" value="75">
-            </div>
-          </div>
-
-          <div class="progress-bar-container" id="singleProgressContainer">
-            <div class="progress-bar-fill" id="singleProgressFill"></div>
-          </div>
-
-          <div style="display: flex; gap: 14px; margin-top: 20px;">
-            <button class="btn-primary" id="btnStartSingle">
-              ⚡ Humanize & Download Document
+            <button class="file-remove-btn" id="btnCancelSingle">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
             </button>
           </div>
 
-          <div id="singleResultArea" style="display: none; margin-top: 24px; padding: 20px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: var(--radius-md);">
+          <div class="parameters-bar">
+            <div class="field-group">
+              <label class="field-label" for="singleMode">Profile Target</label>
+              <select class="select-control" id="singleMode">
+                <option value="ultra_stealth">Ultra Stealth (Detection Evasion)</option>
+                <option value="academic">Academic Scholar</option>
+                <option value="fluent_human">Fluent Human</option>
+                <option value="creative">Creative Non-Fiction</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <div class="field-label">
+                <span>Transformation Rate</span>
+                <span class="field-value-pill" id="singleIntensityLabel">75%</span>
+              </div>
+              <input type="range" class="slider-control" id="singleIntensity" min="40" max="100" value="75">
+            </div>
+          </div>
+
+          <div class="progress-container" id="singleProgressContainer">
+            <div class="progress-fill" id="singleProgressFill"></div>
+          </div>
+
+          <div style="margin-top: 22px;">
+            <button class="btn-primary" id="btnStartSingle">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span>Process Document</span>
+            </button>
+          </div>
+
+          <div id="singleResultArea" style="display: none; margin-top: 24px; padding: 18px; background: var(--bg-subtle); border: 1px solid var(--border-default); border-radius: var(--radius-sm);">
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <div>
-                <h4 style="color: var(--accent-emerald); font-weight: 700; font-size: 1.1rem;">
-                  ✅ Document Successfully Humanized!
-                </h4>
-                <p id="singleResultMeta" style="font-size: 0.88rem; color: var(--text-muted); margin-top: 4px;"></p>
+                <div style="font-size: 0.92rem; font-weight: 600; color: var(--color-success);">Document Ready for Export</div>
+                <div id="singleResultMeta" style="font-size: 0.8rem; color: var(--text-tertiary); margin-top: 3px;"></div>
               </div>
               <a id="btnDownloadSingleDocx" class="btn-success" href="#" target="_blank">
-                ⬇️ Download .docx
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>Export (.DOCX)</span>
               </a>
             </div>
           </div>
@@ -226,197 +282,213 @@
       </div>
     </section>
 
-    <!-- TAB 3: LIVE TEXT EDITOR -->
+    <!-- TAB 3: LIVE EDITOR -->
     <section class="tab-content" id="tab-editor">
-      <div class="glass-card">
-        <div class="card-header">
+      <div class="surface-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
           <div>
-            <h2 class="card-title">✍️ Live Text Editor & Diff Analyzer</h2>
-            <p class="card-subtitle">Paste any AI text to humanize in real-time with side-by-side comparison.</p>
+            <h2 class="panel-title">Interactive Paraphrasing Workspace</h2>
+            <p class="panel-description">Real-time side-by-side restructuring with live perplexity telemetry.</p>
           </div>
-          <div style="display: flex; gap: 10px;">
-            <button class="btn-secondary" id="btnPasteSample">Load Sample AI Text</button>
-            <button class="btn-secondary" id="btnClearEditor">Clear</button>
-          </div>
-        </div>
-
-        <div class="editor-grid">
-          <!-- Left: Original Input -->
-          <div class="editor-box">
-            <div class="editor-header">
-              <div class="editor-title">
-                <span>🤖 Original AI Text</span>
-              </div>
-              <div class="editor-stats" id="originalStats">0 words • 0 chars</div>
-            </div>
-            <textarea class="editor-textarea" id="inputOriginalText" placeholder="Paste your AI text here..."></textarea>
-          </div>
-
-          <!-- Right: Humanized Output -->
-          <div class="editor-box">
-            <div class="editor-header">
-              <div class="editor-title">
-                <span>✨ 100% Humanized Text</span>
-              </div>
-              <div class="editor-stats" id="humanizedStats">0 words • 0 chars</div>
-            </div>
-            <textarea class="editor-textarea" id="outputHumanizedText" placeholder="Humanized output will appear here..." readonly></textarea>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-secondary" id="btnPasteSample">Load Academic Sample</button>
+            <button class="btn-secondary" id="btnClearEditor">Clear Canvas</button>
           </div>
         </div>
 
-        <!-- Controls & Metrics -->
-        <div class="controls-grid" style="margin-top: 20px;">
-          <div class="control-group">
-            <label class="control-label">Humanization Style</label>
-            <select class="select-input" id="editorMode">
-              <option value="ultra_stealth">⚡ Ultra Stealth (Turnitin & GPTZero Bypass)</option>
-              <option value="academic">🎓 Academic Scholar (High Perplexity)</option>
-              <option value="fluent_human">🌿 Fluent Human (Natural & Conversational)</option>
-              <option value="creative">🎨 Creative & Engaging</option>
+        <div class="editor-workspace">
+          <!-- Left: Input Pane -->
+          <div class="editor-pane">
+            <div class="editor-pane-header">
+              <span class="editor-pane-title">Input Passage</span>
+              <span class="editor-pane-counter" id="originalStats">0 words • 0 chars</span>
+            </div>
+            <textarea class="editor-area" id="inputOriginalText" placeholder="Paste draft or synthesized text here..."></textarea>
+          </div>
+
+          <!-- Right: Output Pane -->
+          <div class="editor-pane">
+            <div class="editor-pane-header">
+              <span class="editor-pane-title" style="color: var(--color-success);">Humanized Output</span>
+              <span class="editor-pane-counter" id="humanizedStats">0 words • 0 chars</span>
+            </div>
+            <textarea class="editor-area" id="outputHumanizedText" placeholder="Paraphrased passage will appear here..." readonly></textarea>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="parameters-bar">
+          <div class="field-group">
+            <label class="field-label" for="editorMode">Output Register</label>
+            <select class="select-control" id="editorMode">
+              <option value="ultra_stealth">Ultra Stealth (Adversarial Detection Bypass)</option>
+              <option value="academic">Academic Scholar (High Lexical Perplexity)</option>
+              <option value="fluent_human">Fluent Human (Natural Conversational Tone)</option>
+              <option value="creative">Creative Non-Fiction (Syntactic Flow)</option>
             </select>
           </div>
 
-          <div class="control-group">
-            <label class="control-label">
-              <span>Humanization Intensity</span>
-              <span id="editorIntensityLabel">75%</span>
-            </label>
-            <input type="range" class="range-slider" id="editorIntensity" min="40" max="100" value="75">
+          <div class="field-group">
+            <div class="field-label">
+              <span>Entropy Intensity</span>
+              <span class="field-value-pill" id="editorIntensityLabel">75%</span>
+            </div>
+            <input type="range" class="slider-control" id="editorIntensity" min="40" max="100" value="75">
           </div>
         </div>
 
-        <div style="display: flex; gap: 14px; margin-top: 20px; flex-wrap: wrap;">
+        <div style="display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; align-items: center;">
           <button class="btn-primary" id="btnHumanizeText">
-            ✨ Humanize Text Now
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+            </svg>
+            <span>Execute Paraphrase</span>
+            <span class="kbd-hint">Ctrl + Enter</span>
           </button>
           <button class="btn-secondary" id="btnCopyHumanized">
-            📋 Copy Output
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+            </svg>
+            <span>Copy Text</span>
           </button>
           <button class="btn-secondary" id="btnExportTxt">
-            💾 Export as .txt
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>Save as .TXT</span>
           </button>
         </div>
 
-        <!-- Live Metrics Comparison Cards -->
-        <div class="metrics-grid" id="metricsDisplayArea" style="margin-top: 24px;">
-          <div class="metric-card">
-            <div class="metric-label">Human Score (Before)</div>
-            <div class="metric-val color-red" id="metricHumanBefore">--%</div>
-            <span style="font-size: 0.8rem; color: var(--text-muted);" id="metricVerdictBefore">Status: Unknown</span>
+        <!-- Telemetry Cards -->
+        <div class="telemetry-grid" id="metricsDisplayArea">
+          <div class="telemetry-card">
+            <div class="telemetry-label">Prior Human Score</div>
+            <div class="telemetry-value val-rose" id="metricHumanBefore">--%</div>
+            <div class="telemetry-subtext" id="metricVerdictBefore">Status: Unknown</div>
           </div>
 
-          <div class="metric-card" style="border-color: rgba(16, 185, 129, 0.4);">
-            <div class="metric-label">Human Score (After)</div>
-            <div class="metric-val color-green" id="metricHumanAfter">--%</div>
-            <span style="font-size: 0.8rem; color: var(--accent-emerald);" id="metricVerdictAfter">Status: 100% Human</span>
+          <div class="telemetry-card" style="border-color: rgba(16, 185, 129, 0.25);">
+            <div class="telemetry-label">Post-Paraphrase Score</div>
+            <div class="telemetry-value val-green" id="metricHumanAfter">--%</div>
+            <div class="telemetry-subtext" id="metricVerdictAfter">Status: Human-Equivalent</div>
           </div>
 
-          <div class="metric-card">
-            <div class="metric-label">Sentence Burstiness</div>
-            <div class="metric-val color-purple" id="metricBurstiness">--</div>
-            <span style="font-size: 0.8rem; color: var(--text-muted);">Standard Dev of Lengths</span>
+          <div class="telemetry-card">
+            <div class="telemetry-label">Burstiness Metric</div>
+            <div class="telemetry-value val-indigo" id="metricBurstiness">--</div>
+            <div class="telemetry-subtext">Length variance std-dev</div>
           </div>
 
-          <div class="metric-card">
-            <div class="metric-label">AI Clichés Removed</div>
-            <div class="metric-val color-yellow" id="metricCliches">--</div>
-            <span style="font-size: 0.8rem; color: var(--text-muted);">Buzzwords Eliminated</span>
+          <div class="telemetry-card">
+            <div class="telemetry-label">Markers Replaced</div>
+            <div class="telemetry-value val-amber" id="metricCliches">--</div>
+            <div class="telemetry-subtext">Static AI phrases neutralized</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- TAB 4: AI DETECTOR SCANNER -->
+    <!-- TAB 4: FORENSIC DETECTOR -->
     <section class="tab-content" id="tab-detector">
-      <div class="glass-card">
-        <div class="card-header">
-          <div>
-            <h2 class="card-title">📊 Multi-Factor AI Detection Scanner</h2>
-            <p class="card-subtitle">Check any text against simulated Turnitin, GPTZero, and ZeroGPT algorithms.</p>
-          </div>
+      <div class="surface-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">Forensic Detection Analysis</h2>
+          <p class="panel-description">Evaluate manuscripts against neural perplexity patterns, n-gram entropy, and uniform burstiness distributions.</p>
         </div>
 
-        <textarea class="editor-textarea" id="detectorInputText" style="height: 180px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: var(--radius-sm);" placeholder="Paste text here to scan for AI likelihood..."></textarea>
+        <textarea class="editor-area" id="detectorInputText" style="height: 160px; background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);" placeholder="Paste passage here to evaluate statistical markers..."></textarea>
         
         <div style="margin-top: 16px;">
           <button class="btn-primary" id="btnScanAI">
-            🔍 Scan for AI Detection
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <span>Analyze Linguistic Properties</span>
           </button>
         </div>
 
         <div id="detectorResults" style="display: none; margin-top: 24px;">
-          <div class="metrics-grid">
-            <div class="metric-card">
-              <div class="metric-label">Estimated Human Score</div>
-              <div class="metric-val" id="detHumanScore">--%</div>
+          <div class="telemetry-grid">
+            <div class="telemetry-card">
+              <div class="telemetry-label">Estimated Human Likelihood</div>
+              <div class="telemetry-value" id="detHumanScore">--%</div>
             </div>
-            <div class="metric-card">
-              <div class="metric-label">AI Probability</div>
-              <div class="metric-val" id="detAIScore">--%</div>
+            <div class="telemetry-card">
+              <div class="telemetry-label">Synthetic Token Density</div>
+              <div class="telemetry-value" id="detAIScore">--%</div>
             </div>
-            <div class="metric-card">
-              <div class="metric-label">Burstiness Score</div>
-              <div class="metric-val" id="detBurstiness">--</div>
+            <div class="telemetry-card">
+              <div class="telemetry-label">Syntactic Burstiness</div>
+              <div class="telemetry-value" id="detBurstiness">--</div>
             </div>
-            <div class="metric-card">
-              <div class="metric-label">Reading Ease</div>
-              <div class="metric-val" id="detReadingEase">--</div>
+            <div class="telemetry-card">
+              <div class="telemetry-label">Flesch Reading Ease</div>
+              <div class="telemetry-value" id="detReadingEase">--</div>
             </div>
           </div>
 
-          <div style="margin-top: 24px;">
-            <h4 style="font-weight: 700; margin-bottom: 12px;">Sentence-Level Breakdown:</h4>
-            <div id="detSentenceList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+          <div style="margin-top: 28px;">
+            <div style="font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-tertiary); margin-bottom: 10px;">
+              Sentence-by-Sentence Risk Diagnostics
+            </div>
+            <div class="sentence-breakdown-list" id="detSentenceList"></div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- TAB 5: SETTINGS & ENGINE CONFIG -->
+    <!-- TAB 5: PREFERENCES -->
     <section class="tab-content" id="tab-settings">
-      <div class="glass-card">
-        <div class="card-header">
-          <div>
-            <h2 class="card-title">⚙️ Engine & API Configuration</h2>
-            <p class="card-subtitle">Configure offline modes or optionally connect free AI keys (100% Free).</p>
-          </div>
+      <div class="surface-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">Engine Preferences</h2>
+          <p class="panel-description">Select transformation backends and optional inference providers.</p>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 20px;">
-          <div class="control-group">
-            <label class="control-label">AI Engine Provider</label>
-            <select class="select-input" id="settingProvider">
-              <option value="local">🔒 100% Free Offline Stealth Engine (Default - Zero API Keys Needed)</option>
-              <option value="gemini">🌟 Google Gemini Free API (Gemini 2.0 Flash - 15 RPM Free)</option>
-              <option value="groq">⚡ Groq Cloud Free API (Llama 3.3 70B - Ultra Fast)</option>
-              <option value="ollama">💻 Local Ollama (Local LLM via http://localhost:11434)</option>
+        <div class="settings-form">
+          <div class="field-group">
+            <label class="field-label" for="settingProvider">Inference Architecture</label>
+            <select class="select-control" id="settingProvider">
+              <option value="local">Local Variational Core (Offline • Uncapped)</option>
+              <option value="gemini">Google Gemini Free Endpoint (gemini-2.0-flash)</option>
+              <option value="groq">Groq Cloud Inference (llama-3.3-70b)</option>
+              <option value="ollama">Local Ollama Service (localhost:11434)</option>
             </select>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
-              Default Offline Engine is 100% free and unlimited. No internet or keys required.
+            <p style="font-size: 0.78rem; color: var(--text-tertiary);">
+              The local offline core runs entirely on your device with zero cloud dependencies or rate limits.
             </p>
           </div>
 
-          <div class="control-group" id="apiKeyGroup" style="display: none;">
-            <label class="control-label">Free API Key</label>
-            <input type="password" class="text-input" id="settingApiKey" placeholder="Paste your free API key here...">
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;" id="apiKeyHelpText">
-              Get your free key from Google AI Studio (aistudio.google.com) or Groq (console.groq.com).
+          <div class="field-group" id="apiKeyGroup" style="display: none;">
+            <label class="field-label" for="settingApiKey">Provider Authentication Token</label>
+            <input type="password" class="text-input-field" id="settingApiKey" placeholder="sk-...">
+            <p style="font-size: 0.78rem; color: var(--text-tertiary);" id="apiKeyHelpText">
+              Free keys can be obtained from Google AI Studio or Groq Cloud Console.
             </p>
           </div>
 
-          <div class="control-group">
-            <label class="control-label">Default Humanization Style</label>
-            <select class="select-input" id="settingDefaultMode">
-              <option value="ultra_stealth">Ultra Stealth (Maximum Turnitin / GPTZero Evasion)</option>
-              <option value="academic">Academic Scholar (University Theses & Papers)</option>
-              <option value="fluent_human">Fluent Human (Balanced & Natural)</option>
-              <option value="creative">Creative & Engaging (Varied Flow)</option>
+          <div class="field-group">
+            <label class="field-label" for="settingDefaultMode">Default Transformation Profile</label>
+            <select class="select-control" id="settingDefaultMode">
+              <option value="ultra_stealth">Ultra Stealth (Adversarial Paraphrasing)</option>
+              <option value="academic">Academic Scholar (Scholarly Non-Fiction)</option>
+              <option value="fluent_human">Fluent Human (Balanced Prose)</option>
+              <option value="creative">Creative Non-Fiction</option>
             </select>
           </div>
 
-          <div>
-            <button class="btn-success" id="btnSaveSettings">
-              💾 Save Settings
+          <div style="margin-top: 10px;">
+            <button class="btn-primary" id="btnSaveSettings">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/>
+                <polyline points="7 3 7 8 15 8"/>
+              </svg>
+              <span>Commit Preferences</span>
             </button>
           </div>
         </div>
