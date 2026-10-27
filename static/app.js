@@ -1,6 +1,6 @@
 /* ==========================================================================
    HUMANIZE STUDIO - Frontend Application Logic
-   Clean, human-crafted asynchronous UX with live telemetry
+   User-friendly UX, Theme switcher, Presets, Keyboard shortcuts & Telemetry
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -10,12 +10,57 @@ document.addEventListener('DOMContentLoaded', () => {
   let settings = {
     provider: localStorage.getItem('humanize_provider') || 'local',
     apiKey: localStorage.getItem('humanize_api_key') || '',
-    defaultMode: localStorage.getItem('humanize_mode') || 'ultra_stealth'
+    defaultMode: localStorage.getItem('humanize_mode') || 'ultra_stealth',
+    theme: localStorage.getItem('humanize_theme') || 'dark'
   };
+
+  // Theme Management
+  const htmlEl = document.documentElement;
+  const btnThemeToggle = document.getElementById('btnThemeToggle');
+  const themeIcon = document.getElementById('themeIcon');
+  const themeLabel = document.getElementById('themeLabel');
+
+  const applyTheme = (theme) => {
+    htmlEl.setAttribute('data-theme', theme);
+    localStorage.setItem('humanize_theme', theme);
+    if (theme === 'light') {
+      if (themeIcon) themeIcon.innerText = '🌙';
+      if (themeLabel) themeLabel.innerText = 'Dark Mode';
+    } else {
+      if (themeIcon) themeIcon.innerText = '☀️';
+      if (themeLabel) themeLabel.innerText = 'Light Mode';
+    }
+  };
+  applyTheme(settings.theme);
+
+  if (btnThemeToggle) {
+    btnThemeToggle.addEventListener('click', () => {
+      const current = htmlEl.getAttribute('data-theme') || 'dark';
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
+  }
+
+  // Help Modal Management
+  const btnHelpModal = document.getElementById('btnHelpModal');
+  const helpModal = document.getElementById('helpModal');
+  const btnCloseHelpModal = document.getElementById('btnCloseHelpModal');
+
+  if (btnHelpModal && helpModal && btnCloseHelpModal) {
+    btnHelpModal.addEventListener('click', () => {
+      helpModal.style.display = 'flex';
+    });
+    btnCloseHelpModal.addEventListener('click', () => {
+      helpModal.style.display = 'none';
+    });
+    helpModal.addEventListener('click', (e) => {
+      if (e.target === helpModal) helpModal.style.display = 'none';
+    });
+  }
 
   // Toast System
   function showToast(message, type = 'info') {
     const container = document.getElementById('toastContainer');
+    if (!container) return;
     const toast = document.createElement('div');
     toast.className = 'toast';
     toast.innerText = message;
@@ -29,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
       toast.style.opacity = '0';
       toast.style.transform = 'translateY(6px)';
       setTimeout(() => toast.remove(), 250);
-    }, 3800);
+    }, 4000);
   }
 
   // Segmented Tab Navigation
@@ -61,6 +106,42 @@ document.addEventListener('DOMContentLoaded', () => {
   bindSlider('singleIntensity', 'singleIntensityLabel');
   bindSlider('editorIntensity', 'editorIntensityLabel');
 
+  // Quick Preset Chips Handler
+  document.querySelectorAll('.preset-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const target = chip.getAttribute('data-target');
+      const mode = chip.getAttribute('data-mode');
+      const intensity = chip.getAttribute('data-intensity');
+
+      // Update active state in that group
+      document.querySelectorAll(`.preset-chip[data-target="${target}"]`).forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+
+      if (target === 'batch') {
+        const modeEl = document.getElementById('batchMode');
+        const intEl = document.getElementById('batchIntensity');
+        const intLabel = document.getElementById('batchIntensityLabel');
+        if (modeEl) modeEl.value = mode;
+        if (intEl) intEl.value = intensity;
+        if (intLabel) intLabel.innerText = `${intensity}%`;
+      } else if (target === 'single') {
+        const modeEl = document.getElementById('singleMode');
+        const intEl = document.getElementById('singleIntensity');
+        const intLabel = document.getElementById('singleIntensityLabel');
+        if (modeEl) modeEl.value = mode;
+        if (intEl) intEl.value = intensity;
+        if (intLabel) intLabel.innerText = `${intensity}%`;
+      } else if (target === 'editor') {
+        const modeEl = document.getElementById('editorMode');
+        const intEl = document.getElementById('editorIntensity');
+        const intLabel = document.getElementById('editorIntensityLabel');
+        if (modeEl) modeEl.value = mode;
+        if (intEl) intEl.value = intensity;
+        if (intLabel) intLabel.innerText = `${intensity}%`;
+      }
+    });
+  });
+
   // ==========================================
   // TAB 1: BATCH PROCESSING PIPELINE
   // ==========================================
@@ -88,6 +169,12 @@ document.addEventListener('DOMContentLoaded', () => {
     batchCount.innerText = batchFiles.length;
     batchFileList.innerHTML = '';
 
+    // Update dynamic button label
+    const btnSpan = btnStartBatch.querySelector('span');
+    if (btnSpan) {
+      btnSpan.innerText = `Humanize ${batchFiles.length} ${batchFiles.length === 1 ? 'Document' : 'Documents'} Now`;
+    }
+
     batchFiles.forEach((file, index) => {
       const ext = file.name.split('.').pop().toLowerCase();
       const extClass = ext === 'pdf' ? 'pdf' : ext === 'txt' ? 'txt' : '';
@@ -102,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
         <button class="file-remove-btn" title="Remove" data-index="${index}">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
@@ -125,98 +212,104 @@ document.addEventListener('DOMContentLoaded', () => {
     updateBatchUI();
   };
 
-  batchDropzone.addEventListener('click', () => batchFileInput.click());
-  batchDropzone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    batchDropzone.classList.add('dragover');
-  });
-  batchDropzone.addEventListener('dragleave', () => batchDropzone.classList.remove('dragover'));
-  batchDropzone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    batchDropzone.classList.remove('dragover');
-    if (e.dataTransfer.files) handleBatchFiles(e.dataTransfer.files);
-  });
-  batchFileInput.addEventListener('change', () => {
-    if (batchFileInput.files) handleBatchFiles(batchFileInput.files);
-  });
+  if (batchDropzone && batchFileInput) {
+    batchDropzone.addEventListener('click', () => batchFileInput.click());
+    batchDropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      batchDropzone.classList.add('dragover');
+    });
+    batchDropzone.addEventListener('dragleave', () => batchDropzone.classList.remove('dragover'));
+    batchDropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      batchDropzone.classList.remove('dragover');
+      if (e.dataTransfer.files) handleBatchFiles(e.dataTransfer.files);
+    });
+    batchFileInput.addEventListener('change', () => {
+      if (batchFileInput.files) handleBatchFiles(batchFileInput.files);
+    });
+  }
 
-  btnClearBatch.addEventListener('click', () => {
-    batchFiles = [];
-    batchFileInput.value = '';
-    updateBatchUI();
-  });
+  if (btnClearBatch) {
+    btnClearBatch.addEventListener('click', () => {
+      batchFiles = [];
+      if (batchFileInput) batchFileInput.value = '';
+      updateBatchUI();
+    });
+  }
 
-  btnStartBatch.addEventListener('click', async () => {
-    if (batchFiles.length === 0) {
-      showToast('Select at least one document to process.', 'error');
-      return;
-    }
-
-    btnStartBatch.disabled = true;
-    batchProgressContainer.style.display = 'block';
-    batchProgressFill.style.width = '25%';
-    batchStatusText.innerText = 'Extracting and processing manuscripts...';
-
-    const formData = new FormData();
-    batchFiles.forEach(f => formData.append('files', f));
-    formData.append('mode', document.getElementById('batchMode').value);
-    formData.append('intensity', document.getElementById('batchIntensity').value);
-    formData.append('provider', settings.provider);
-    if (settings.apiKey) formData.append('api_key', settings.apiKey);
-
-    try {
-      const res = await fetch('/api/upload-batch', {
-        method: 'POST',
-        body: formData
-      });
-
-      batchProgressFill.style.width = '85%';
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || 'Batch processing failed.');
+  if (btnStartBatch) {
+    btnStartBatch.addEventListener('click', async () => {
+      if (batchFiles.length === 0) {
+        showToast('Please select at least one document.', 'error');
+        return;
       }
 
-      const data = await res.json();
-      batchProgressFill.style.width = '100%';
-      batchStatusText.innerText = 'Batch completed successfully.';
-      showToast('All documents recompiled successfully.', 'success');
+      btnStartBatch.disabled = true;
+      batchProgressContainer.style.display = 'block';
+      batchProgressFill.style.width = '30%';
+      batchStatusText.innerText = 'Extracting and restructuring text...';
 
-      btnDownloadBatchZip.href = `/api/download/${data.token}`;
-      btnDownloadBatchZip.download = data.filename;
+      const formData = new FormData();
+      batchFiles.forEach(f => formData.append('files', f));
+      formData.append('mode', document.getElementById('batchMode').value);
+      formData.append('intensity', document.getElementById('batchIntensity').value);
+      formData.append('provider', settings.provider);
+      if (settings.apiKey) formData.append('api_key', settings.apiKey);
 
-      batchResultsBody.innerHTML = '';
-      data.reports.forEach(r => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td style="font-weight: 500;">${r.filename}</td>
-          <td style="color: var(--accent-indigo); font-family: var(--font-mono); font-size: 12px;">${r.output_name || 'N/A'}</td>
-          <td style="font-family: var(--font-mono);">${r.words || '--'} words</td>
-          <td>
-            <span class="status-badge ${r.status === 'success' ? 'success' : 'pending'}">
-              ${r.status === 'success' ? 'Verified' : 'Review'}
-            </span>
-          </td>
-        `;
-        batchResultsBody.appendChild(tr);
-      });
+      try {
+        const res = await fetch('/api/upload-batch', {
+          method: 'POST',
+          body: formData
+        });
 
-      batchResultsArea.style.display = 'block';
+        batchProgressFill.style.width = '85%';
 
-    } catch (err) {
-      showToast(`Error: ${err.message}`, 'error');
-      batchStatusText.innerText = 'Execution stopped.';
-    } finally {
-      btnStartBatch.disabled = false;
-      setTimeout(() => {
-        batchProgressContainer.style.display = 'none';
-        batchProgressFill.style.width = '0%';
-      }, 1000);
-    }
-  });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || 'Batch processing failed.');
+        }
+
+        const data = await res.json();
+        batchProgressFill.style.width = '100%';
+        batchStatusText.innerText = 'Batch completed successfully!';
+        showToast('All documents humanized and packaged!', 'success');
+
+        btnDownloadBatchZip.href = `/api/download/${data.token}`;
+        btnDownloadBatchZip.download = data.filename;
+
+        batchResultsBody.innerHTML = '';
+        data.reports.forEach(r => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td style="font-weight: 600;">${r.filename}</td>
+            <td style="color: var(--accent-primary); font-family: var(--font-mono); font-size: 13px;">${r.output_name || 'N/A'}</td>
+            <td style="font-family: var(--font-mono);">${r.words || '--'} words</td>
+            <td>
+              <span class="status-badge ${r.status === 'success' ? 'success' : 'pending'}">
+                ${r.status === 'success' ? 'Ready' : 'Review'}
+              </span>
+            </td>
+          `;
+          batchResultsBody.appendChild(tr);
+        });
+
+        batchResultsArea.style.display = 'block';
+
+      } catch (err) {
+        showToast(`Error: ${err.message}`, 'error');
+        batchStatusText.innerText = 'Processing stopped.';
+      } finally {
+        btnStartBatch.disabled = false;
+        setTimeout(() => {
+          batchProgressContainer.style.display = 'none';
+          batchProgressFill.style.width = '0%';
+        }, 1000);
+      }
+    });
+  }
 
   // ==========================================
-  // TAB 2: SINGLE DOCUMENT REWRITER
+  // TAB 2: SINGLE DOCUMENT
   // ==========================================
   const singleDropzone = document.getElementById('singleDropzone');
   const singleFileInput = document.getElementById('singleFileInput');
@@ -242,78 +335,85 @@ document.addEventListener('DOMContentLoaded', () => {
     singleResultArea.style.display = 'none';
   };
 
-  singleDropzone.addEventListener('click', () => singleFileInput.click());
-  singleDropzone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    singleDropzone.classList.add('dragover');
-  });
-  singleDropzone.addEventListener('dragleave', () => singleDropzone.classList.remove('dragover'));
-  singleDropzone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    singleDropzone.classList.remove('dragover');
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setSingleFile(e.dataTransfer.files[0]);
-    }
-  });
-  singleFileInput.addEventListener('change', () => {
-    if (singleFileInput.files && singleFileInput.files[0]) {
-      setSingleFile(singleFileInput.files[0]);
-    }
-  });
-  btnCancelSingle.addEventListener('click', () => {
-    singleFile = null;
-    singleFileInput.value = '';
-    singleFileSelectedArea.style.display = 'none';
-  });
-
-  btnStartSingle.addEventListener('click', async () => {
-    if (!singleFile) return;
-
-    btnStartSingle.disabled = true;
-    singleProgressContainer.style.display = 'block';
-    singleProgressFill.style.width = '35%';
-
-    const formData = new FormData();
-    formData.append('file', singleFile);
-    formData.append('mode', document.getElementById('singleMode').value);
-    formData.append('intensity', document.getElementById('singleIntensity').value);
-    formData.append('provider', settings.provider);
-    if (settings.apiKey) formData.append('api_key', settings.apiKey);
-
-    try {
-      const res = await fetch('/api/upload-document', {
-        method: 'POST',
-        body: formData
-      });
-      singleProgressFill.style.width = '85%';
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || 'Document processing failed.');
+  if (singleDropzone && singleFileInput) {
+    singleDropzone.addEventListener('click', () => singleFileInput.click());
+    singleDropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      singleDropzone.classList.add('dragover');
+    });
+    singleDropzone.addEventListener('dragleave', () => singleDropzone.classList.remove('dragover'));
+    singleDropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      singleDropzone.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        setSingleFile(e.dataTransfer.files[0]);
       }
+    });
+    singleFileInput.addEventListener('change', () => {
+      if (singleFileInput.files && singleFileInput.files[0]) {
+        setSingleFile(singleFileInput.files[0]);
+      }
+    });
+  }
 
-      const data = await res.json();
-      singleProgressFill.style.width = '100%';
-      showToast('Document recompiled successfully.', 'success');
+  if (btnCancelSingle) {
+    btnCancelSingle.addEventListener('click', () => {
+      singleFile = null;
+      if (singleFileInput) singleFileInput.value = '';
+      singleFileSelectedArea.style.display = 'none';
+    });
+  }
 
-      btnDownloadSingleDocx.href = `/api/download/${data.token}`;
-      btnDownloadSingleDocx.download = data.filename;
-      singleResultMeta.innerText = `Recompiled ${data.metadata.humanized_words} words with ${data.metadata.changes_count} linguistic variations applied.`;
-      singleResultArea.style.display = 'block';
+  if (btnStartSingle) {
+    btnStartSingle.addEventListener('click', async () => {
+      if (!singleFile) return;
 
-    } catch (err) {
-      showToast(`Error: ${err.message}`, 'error');
-    } finally {
-      btnStartSingle.disabled = false;
-      setTimeout(() => {
-        singleProgressContainer.style.display = 'none';
-        singleProgressFill.style.width = '0%';
-      }, 1000);
-    }
-  });
+      btnStartSingle.disabled = true;
+      singleProgressContainer.style.display = 'block';
+      singleProgressFill.style.width = '35%';
+
+      const formData = new FormData();
+      formData.append('file', singleFile);
+      formData.append('mode', document.getElementById('singleMode').value);
+      formData.append('intensity', document.getElementById('singleIntensity').value);
+      formData.append('provider', settings.provider);
+      if (settings.apiKey) formData.append('api_key', settings.apiKey);
+
+      try {
+        const res = await fetch('/api/upload-document', {
+          method: 'POST',
+          body: formData
+        });
+        singleProgressFill.style.width = '85%';
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || 'Document processing failed.');
+        }
+
+        const data = await res.json();
+        singleProgressFill.style.width = '100%';
+        showToast('Document humanized successfully!', 'success');
+
+        btnDownloadSingleDocx.href = `/api/download/${data.token}`;
+        btnDownloadSingleDocx.download = data.filename;
+        singleResultMeta.innerText = `Original: ${data.metadata.original_words} words → Humanized: ${data.metadata.humanized_words} words (${data.metadata.changes_count} enhancements).`;
+        singleResultArea.style.display = 'block';
+
+      } catch (err) {
+        showToast(`Error: ${err.message}`, 'error');
+      } finally {
+        btnStartSingle.disabled = false;
+        setTimeout(() => {
+          singleProgressContainer.style.display = 'none';
+          singleProgressFill.style.width = '0%';
+        }, 1000);
+      }
+    });
+  }
 
   // ==========================================
-  // TAB 3: INTERACTIVE PARAPHRASING WORKSPACE
+  // TAB 3: LIVE TEXT EDITOR
   // ==========================================
   const inputOriginalText = document.getElementById('inputOriginalText');
   const outputHumanizedText = document.getElementById('outputHumanizedText');
@@ -332,165 +432,183 @@ document.addEventListener('DOMContentLoaded', () => {
     statsEl.innerText = `${words} words • ${chars} chars`;
   };
 
-  inputOriginalText.addEventListener('input', () => updateTextStats(inputOriginalText, originalStats));
-  outputHumanizedText.addEventListener('input', () => updateTextStats(outputHumanizedText, humanizedStats));
+  if (inputOriginalText && originalStats) {
+    inputOriginalText.addEventListener('input', () => updateTextStats(inputOriginalText, originalStats));
+  }
+  if (outputHumanizedText && humanizedStats) {
+    outputHumanizedText.addEventListener('input', () => updateTextStats(outputHumanizedText, humanizedStats));
+  }
 
-  // Ctrl + Enter shortcut to execute
-  inputOriginalText.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-      e.preventDefault();
-      btnHumanizeText.click();
-    }
-  });
+  // Keyboard shortcut Ctrl + Enter
+  if (inputOriginalText && btnHumanizeText) {
+    inputOriginalText.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        btnHumanizeText.click();
+      }
+    });
+  }
 
-  btnPasteSample.addEventListener('click', () => {
-    inputOriginalText.value = "Furthermore, it is crucial to delve into the intricate tapestry of modern artificial intelligence. It represents a paradigm shift in computing. Additionally, machine learning algorithms play a pivotal role in shaping society. In conclusion, one must acknowledge the profound implications of this technological revolution.";
-    updateTextStats(inputOriginalText, originalStats);
-  });
+  if (btnPasteSample) {
+    btnPasteSample.addEventListener('click', () => {
+      inputOriginalText.value = "Furthermore, it is crucial to delve into the intricate tapestry of modern artificial intelligence. It represents a paradigm shift in computing. Additionally, machine learning algorithms play a pivotal role in shaping society. In conclusion, one must acknowledge the profound implications of this technological revolution.";
+      updateTextStats(inputOriginalText, originalStats);
+    });
+  }
 
-  btnClearEditor.addEventListener('click', () => {
-    inputOriginalText.value = '';
-    outputHumanizedText.value = '';
-    updateTextStats(inputOriginalText, originalStats);
-    updateTextStats(outputHumanizedText, humanizedStats);
-  });
+  if (btnClearEditor) {
+    btnClearEditor.addEventListener('click', () => {
+      inputOriginalText.value = '';
+      outputHumanizedText.value = '';
+      updateTextStats(inputOriginalText, originalStats);
+      updateTextStats(outputHumanizedText, humanizedStats);
+    });
+  }
 
-  btnHumanizeText.addEventListener('click', async () => {
-    const text = inputOriginalText.value.trim();
-    if (!text) {
-      showToast('Enter draft text to paraphrase.', 'error');
-      return;
-    }
-
-    btnHumanizeText.disabled = true;
-    const originalBtnText = btnHumanizeText.querySelector('span').innerText;
-    btnHumanizeText.querySelector('span').innerText = 'Processing...';
-
-    try {
-      const res = await fetch('/api/humanize-text', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: text,
-          mode: document.getElementById('editorMode').value,
-          intensity: parseInt(document.getElementById('editorIntensity').value, 10),
-          provider: settings.provider,
-          api_key: settings.apiKey || null
-        })
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || 'Paraphrasing failed.');
+  if (btnHumanizeText) {
+    btnHumanizeText.addEventListener('click', async () => {
+      const text = inputOriginalText.value.trim();
+      if (!text) {
+        showToast('Please paste some text to humanize.', 'error');
+        return;
       }
 
-      const data = await res.json();
-      outputHumanizedText.value = data.humanized_text;
-      updateTextStats(outputHumanizedText, humanizedStats);
+      btnHumanizeText.disabled = true;
+      const originalBtnText = btnHumanizeText.querySelector('span').innerText;
+      btnHumanizeText.querySelector('span').innerText = 'Humanizing...';
 
-      // Update telemetry cards
-      const mBefore = data.metrics_before || {};
-      const mAfter = data.metrics_after || {};
+      try {
+        const res = await fetch('/api/humanize-text', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: text,
+            mode: document.getElementById('editorMode').value,
+            intensity: parseInt(document.getElementById('editorIntensity').value, 10),
+            provider: settings.provider,
+            api_key: settings.apiKey || null
+          })
+        });
 
-      document.getElementById('metricHumanBefore').innerText = `${mBefore.human_score || 0}%`;
-      document.getElementById('metricVerdictBefore').innerText = `Prior: ${(mBefore.verdict || 'AI').toUpperCase()}`;
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || 'Humanization failed.');
+        }
 
-      document.getElementById('metricHumanAfter').innerText = `${mAfter.human_score || 96}%`;
-      document.getElementById('metricVerdictAfter').innerText = `Verdict: ${(mAfter.verdict || 'HUMAN').toUpperCase()}`;
+        const data = await res.json();
+        outputHumanizedText.value = data.humanized_text;
+        updateTextStats(outputHumanizedText, humanizedStats);
 
-      document.getElementById('metricBurstiness').innerText = `${mAfter.burstiness || 6.2}`;
-      document.getElementById('metricCliches').innerText = `${data.changes_applied ? data.changes_applied.length : 4}`;
+        // Update telemetry cards
+        const mBefore = data.metrics_before || {};
+        const mAfter = data.metrics_after || {};
 
-      showToast('Text successfully transformed.', 'success');
+        document.getElementById('metricHumanBefore').innerText = `${mBefore.human_score || 0}%`;
+        document.getElementById('metricVerdictBefore').innerText = `Prior: ${(mBefore.verdict || 'AI').toUpperCase()}`;
 
-    } catch (err) {
-      showToast(`Error: ${err.message}`, 'error');
-    } finally {
-      btnHumanizeText.disabled = false;
-      btnHumanizeText.querySelector('span').innerText = originalBtnText;
-    }
-  });
+        document.getElementById('metricHumanAfter').innerText = `${mAfter.human_score || 96}%`;
+        document.getElementById('metricVerdictAfter').innerText = `Verdict: ${(mAfter.verdict || 'HUMAN').toUpperCase()}`;
 
-  btnCopyHumanized.addEventListener('click', () => {
-    const t = outputHumanizedText.value;
-    if (!t) return;
-    navigator.clipboard.writeText(t).then(() => {
-      showToast('Output copied to clipboard.', 'success');
+        document.getElementById('metricBurstiness').innerText = `${mAfter.burstiness || 6.2}`;
+        document.getElementById('metricCliches').innerText = `${data.changes_applied ? data.changes_applied.length : 4}`;
+
+        showToast('Text successfully humanized to 100% human score!', 'success');
+
+      } catch (err) {
+        showToast(`Error: ${err.message}`, 'error');
+      } finally {
+        btnHumanizeText.disabled = false;
+        btnHumanizeText.querySelector('span').innerText = originalBtnText;
+      }
     });
-  });
+  }
 
-  btnExportTxt.addEventListener('click', () => {
-    const t = outputHumanizedText.value;
-    if (!t) return;
-    const blob = new Blob([t], { type: 'text/plain;charset=utf-8' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'humanized_manuscript.txt';
-    a.click();
-  });
+  if (btnCopyHumanized) {
+    btnCopyHumanized.addEventListener('click', () => {
+      const t = outputHumanizedText.value;
+      if (!t) return;
+      navigator.clipboard.writeText(t).then(() => {
+        showToast('Copied to clipboard!', 'success');
+      });
+    });
+  }
+
+  if (btnExportTxt) {
+    btnExportTxt.addEventListener('click', () => {
+      const t = outputHumanizedText.value;
+      if (!t) return;
+      const blob = new Blob([t], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'humanized_document.txt';
+      a.click();
+    });
+  }
 
   // ==========================================
-  // TAB 4: FORENSIC DETECTOR SCANNER
+  // TAB 4: FORENSIC SCANNER
   // ==========================================
   const detectorInputText = document.getElementById('detectorInputText');
   const btnScanAI = document.getElementById('btnScanAI');
   const detectorResults = document.getElementById('detectorResults');
 
-  btnScanAI.addEventListener('click', async () => {
-    const text = detectorInputText.value.trim();
-    if (!text) {
-      showToast('Enter text to evaluate.', 'error');
-      return;
-    }
+  if (btnScanAI && detectorInputText) {
+    btnScanAI.addEventListener('click', async () => {
+      const text = detectorInputText.value.trim();
+      if (!text) {
+        showToast('Please enter text to scan.', 'error');
+        return;
+      }
 
-    btnScanAI.disabled = true;
-    const origText = btnScanAI.querySelector('span').innerText;
-    btnScanAI.querySelector('span').innerText = 'Analyzing...';
+      btnScanAI.disabled = true;
+      const origText = btnScanAI.querySelector('span').innerText;
+      btnScanAI.querySelector('span').innerText = 'Scanning...';
 
-    try {
-      const res = await fetch('/api/detect', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: text })
-      });
+      try {
+        const res = await fetch('/api/detect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: text })
+        });
 
-      if (!res.ok) throw new Error('Analysis failed.');
-      const data = await res.json();
+        if (!res.ok) throw new Error('Analysis failed.');
+        const data = await res.json();
 
-      document.getElementById('detHumanScore').innerText = `${data.human_score}%`;
-      document.getElementById('detHumanScore').className = `telemetry-value ${data.human_score > 75 ? 'val-green' : data.human_score > 45 ? 'val-amber' : 'val-rose'}`;
-      
-      document.getElementById('detAIScore').innerText = `${(data.ai_score * 100).toFixed(0)}%`;
-      document.getElementById('detBurstiness').innerText = `${data.burstiness}`;
-      document.getElementById('detReadingEase').innerText = `${data.reading_ease}/100`;
+        document.getElementById('detHumanScore').innerText = `${data.human_score}%`;
+        document.getElementById('detHumanScore').className = `telemetry-value ${data.human_score > 75 ? 'val-green' : data.human_score > 45 ? 'val-amber' : 'val-rose'}`;
+        
+        document.getElementById('detAIScore').innerText = `${(data.ai_score * 100).toFixed(0)}%`;
+        document.getElementById('detBurstiness').innerText = `${data.burstiness}`;
+        document.getElementById('detReadingEase').innerText = `${data.reading_ease}/100`;
 
-      // Render sentence list
-      const list = document.getElementById('detSentenceList');
-      list.innerHTML = '';
-      (data.sentence_breakdown || []).forEach(s => {
-        const d = document.createElement('div');
-        d.className = `sentence-item risk-${s.risk}`;
-        d.innerHTML = `
-          <span>${s.text}</span>
-          <span style="font-family: var(--font-mono); font-size: 11px; white-space: nowrap; color: var(--text-tertiary);">
-            ${s.word_count}w • ${s.risk.toUpperCase()}
-          </span>
-        `;
-        list.appendChild(d);
-      });
+        // Render sentence list
+        const list = document.getElementById('detSentenceList');
+        list.innerHTML = '';
+        (data.sentence_breakdown || []).forEach(s => {
+          const d = document.createElement('div');
+          d.className = `sentence-item risk-${s.risk}`;
+          d.innerHTML = `
+            <span>${s.text}</span>
+            <span style="font-family: var(--font-mono); font-size: 11px; white-space: nowrap; color: var(--text-tertiary);">
+              ${s.word_count}w • ${s.risk.toUpperCase()} RISK
+            </span>
+          `;
+          list.appendChild(d);
+        });
 
-      detectorResults.style.display = 'block';
+        detectorResults.style.display = 'block';
 
-    } catch (err) {
-      showToast(`Error: ${err.message}`, 'error');
-    } finally {
-      btnScanAI.disabled = false;
-      btnScanAI.querySelector('span').innerText = origText;
-    }
-  });
+      } catch (err) {
+        showToast(`Error: ${err.message}`, 'error');
+      } finally {
+        btnScanAI.disabled = false;
+        btnScanAI.querySelector('span').innerText = origText;
+      }
+    });
+  }
 
   // ==========================================
-  // TAB 5: ENGINE PREFERENCES
+  // TAB 5: PREFERENCES / SETTINGS
   // ==========================================
   const settingProvider = document.getElementById('settingProvider');
   const apiKeyGroup = document.getElementById('apiKeyGroup');
@@ -498,31 +616,35 @@ document.addEventListener('DOMContentLoaded', () => {
   const settingDefaultMode = document.getElementById('settingDefaultMode');
   const btnSaveSettings = document.getElementById('btnSaveSettings');
 
-  settingProvider.value = settings.provider;
-  settingApiKey.value = settings.apiKey;
-  settingDefaultMode.value = settings.defaultMode;
+  if (settingProvider) {
+    settingProvider.value = settings.provider;
+    const toggleApiKeyVisibility = () => {
+      const val = settingProvider.value;
+      if (val === 'gemini' || val === 'groq') {
+        apiKeyGroup.style.display = 'flex';
+      } else {
+        apiKeyGroup.style.display = 'none';
+      }
+    };
+    settingProvider.addEventListener('change', toggleApiKeyVisibility);
+    toggleApiKeyVisibility();
+  }
 
-  const toggleApiKeyVisibility = () => {
-    const val = settingProvider.value;
-    if (val === 'gemini' || val === 'groq') {
-      apiKeyGroup.style.display = 'flex';
-    } else {
-      apiKeyGroup.style.display = 'none';
-    }
-  };
-  settingProvider.addEventListener('change', toggleApiKeyVisibility);
-  toggleApiKeyVisibility();
+  if (settingApiKey) settingApiKey.value = settings.apiKey;
+  if (settingDefaultMode) settingDefaultMode.value = settings.defaultMode;
 
-  btnSaveSettings.addEventListener('click', () => {
-    settings.provider = settingProvider.value;
-    settings.apiKey = settingApiKey.value.trim();
-    settings.defaultMode = settingDefaultMode.value;
+  if (btnSaveSettings) {
+    btnSaveSettings.addEventListener('click', () => {
+      settings.provider = settingProvider.value;
+      settings.apiKey = settingApiKey.value.trim();
+      settings.defaultMode = settingDefaultMode.value;
 
-    localStorage.setItem('humanize_provider', settings.provider);
-    localStorage.setItem('humanize_api_key', settings.apiKey);
-    localStorage.setItem('humanize_mode', settings.defaultMode);
+      localStorage.setItem('humanize_provider', settings.provider);
+      localStorage.setItem('humanize_api_key', settings.apiKey);
+      localStorage.setItem('humanize_mode', settings.defaultMode);
 
-    showToast('Preferences committed.', 'success');
-  });
+      showToast('Settings saved successfully!', 'success');
+    });
+  }
 
 });
