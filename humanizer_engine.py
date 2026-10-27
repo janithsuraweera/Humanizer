@@ -258,9 +258,8 @@ class HumanizerEngine:
 
         try:
             if provider == "gemini":
-                # Google Gemini Free API
-                model = model_name or "gemini-2.0-flash"
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+                # Google Gemini Free API with fallback models
+                models_to_try = [model_name] if model_name else ["gemini-2.5-flash", "gemini-flash-latest", "gemma-4-26b-a4b-it", "gemini-2.0-flash"]
                 payload = {
                     "contents": [{
                         "parts": [
@@ -272,15 +271,20 @@ class HumanizerEngine:
                         "topP": 0.95
                     }
                 }
-                async with httpx.AsyncClient(timeout=45.0) as client:
-                    resp = await client.post(url, json=payload)
-                    if resp.status_code == 200:
-                        data = resp.json()
-                        candidates = data.get("candidates", [])
-                        if candidates:
-                            parts = candidates[0].get("content", {}).get("parts", [])
-                            if parts:
-                                return parts[0].get("text", "").strip()
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    for m in models_to_try:
+                        url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={api_key}"
+                        try:
+                            resp = await client.post(url, json=payload)
+                            if resp.status_code == 200:
+                                data = resp.json()
+                                candidates = data.get("candidates", [])
+                                if candidates:
+                                    parts = candidates[0].get("content", {}).get("parts", [])
+                                    if parts:
+                                        return parts[0].get("text", "").strip()
+                        except Exception:
+                            continue
             
             elif provider == "groq":
                 # Groq Free Cloud API
