@@ -190,9 +190,13 @@ async def api_download(token: str):
 # Static directory mount
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 if not os.path.exists(STATIC_DIR):
-    os.makedirs(STATIC_DIR)
+    try:
+        os.makedirs(STATIC_DIR)
+    except Exception:
+        pass
 
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+if os.path.exists(STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_index():
