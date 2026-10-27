@@ -237,6 +237,40 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const createProgressTicker = (fillEl, statusEl, statusMessages) => {
+    let percent = 15;
+    fillEl.style.width = '15%';
+    fillEl.classList.add('active');
+    let msgIndex = 0;
+    if (statusEl) statusEl.innerText = statusMessages[0];
+
+    const timer = setInterval(() => {
+      if (percent < 90) {
+        percent += Math.floor(Math.random() * 8) + 4;
+        if (percent > 90) percent = 90;
+        fillEl.style.width = `${percent}%`;
+      }
+      msgIndex++;
+      if (statusEl && statusMessages[msgIndex]) {
+        statusEl.innerText = statusMessages[msgIndex];
+      }
+    }, 600);
+
+    return {
+      stop: (success, finalMsg) => {
+        clearInterval(timer);
+        fillEl.classList.remove('active');
+        if (success) {
+          fillEl.style.width = '100%';
+          if (statusEl) statusEl.innerText = finalMsg || 'Completed successfully!';
+        } else {
+          fillEl.style.width = '0%';
+          if (statusEl) statusEl.innerText = finalMsg || 'Processing failed.';
+        }
+      }
+    };
+  };
+
   if (btnStartBatch) {
     btnStartBatch.addEventListener('click', async () => {
       if (batchFiles.length === 0) {
@@ -246,8 +280,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       btnStartBatch.disabled = true;
       batchProgressContainer.style.display = 'block';
-      batchProgressFill.style.width = '30%';
-      batchStatusText.innerText = 'Extracting and restructuring text...';
+      const ticker = createProgressTicker(batchProgressFill, batchStatusText, [
+        'Extracting manuscript text & structure...',
+        'Scanning AI patterns & clichés...',
+        'Applying ultra-stealth humanization...',
+        'Restructuring syntax and burstiness...',
+        'Packaging Word documents (.docx)...'
+      ]);
 
       const formData = new FormData();
       batchFiles.forEach(f => formData.append('files', f));
@@ -256,22 +295,29 @@ document.addEventListener('DOMContentLoaded', () => {
       formData.append('provider', settings.provider);
       if (settings.apiKey) formData.append('api_key', settings.apiKey);
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120000);
+
       try {
         const res = await fetch('/api/upload-batch', {
           method: 'POST',
-          body: formData
+          body: formData,
+          signal: controller.signal
         });
 
-        batchProgressFill.style.width = '85%';
-
         if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.detail || 'Batch processing failed.');
+          let errMsg = 'Batch processing failed.';
+          try {
+            const err = await res.json();
+            errMsg = err.detail || errMsg;
+          } catch (_) {
+            errMsg = `Server error (${res.status}: ${res.statusText || 'Timeout or gateway error'})`;
+          }
+          throw new Error(errMsg);
         }
 
         const data = await res.json();
-        batchProgressFill.style.width = '100%';
-        batchStatusText.innerText = 'Batch completed successfully!';
+        ticker.stop(true, 'Batch completed successfully!');
         showToast('All documents humanized and packaged!', 'success');
 
         btnDownloadBatchZip.href = `/api/download/${data.token}`;
@@ -296,14 +342,16 @@ document.addEventListener('DOMContentLoaded', () => {
         batchResultsArea.style.display = 'block';
 
       } catch (err) {
-        showToast(`Error: ${err.message}`, 'error');
-        batchStatusText.innerText = 'Processing stopped.';
+        const msg = err.name === 'AbortError' ? 'Request timed out. Please try a smaller document.' : err.message;
+        ticker.stop(false, 'Processing failed.');
+        showToast(`Error: ${msg}`, 'error');
       } finally {
+        clearTimeout(timeoutId);
         btnStartBatch.disabled = false;
         setTimeout(() => {
           batchProgressContainer.style.display = 'none';
           batchProgressFill.style.width = '0%';
-        }, 1000);
+        }, 1500);
       }
     });
   }
@@ -323,6 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const singleResultArea = document.getElementById('singleResultArea');
   const btnDownloadSingleDocx = document.getElementById('btnDownloadSingleDocx');
   const singleResultMeta = document.getElementById('singleResultMeta');
+  const singleStatusText = document.getElementById('singleStatusText');
 
   const setSingleFile = (file) => {
     singleFile = file;
@@ -370,7 +419,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       btnStartSingle.disabled = true;
       singleProgressContainer.style.display = 'block';
-      singleProgressFill.style.width = '35%';
+      const ticker = createProgressTicker(singleProgressFill, singleStatusText, [
+        'Extracting document text & headings...',
+        'Analyzing AI markers and vocabulary...',
+        'Applying natural human restructuring...',
+        'Sculpting sentence burstiness...',
+        'Rebuilding formatted Word document...'
+      ]);
 
       const formData = new FormData();
       formData.append('file', singleFile);
@@ -379,20 +434,29 @@ document.addEventListener('DOMContentLoaded', () => {
       formData.append('provider', settings.provider);
       if (settings.apiKey) formData.append('api_key', settings.apiKey);
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120000);
+
       try {
         const res = await fetch('/api/upload-document', {
           method: 'POST',
-          body: formData
+          body: formData,
+          signal: controller.signal
         });
-        singleProgressFill.style.width = '85%';
 
         if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.detail || 'Document processing failed.');
+          let errMsg = 'Document processing failed.';
+          try {
+            const err = await res.json();
+            errMsg = err.detail || errMsg;
+          } catch (_) {
+            errMsg = `Server error (${res.status}: ${res.statusText || 'Timeout or gateway error'})`;
+          }
+          throw new Error(errMsg);
         }
 
         const data = await res.json();
-        singleProgressFill.style.width = '100%';
+        ticker.stop(true, 'Document humanized successfully!');
         showToast('Document humanized successfully!', 'success');
 
         btnDownloadSingleDocx.href = `/api/download/${data.token}`;
@@ -401,13 +465,16 @@ document.addEventListener('DOMContentLoaded', () => {
         singleResultArea.style.display = 'block';
 
       } catch (err) {
-        showToast(`Error: ${err.message}`, 'error');
+        const msg = err.name === 'AbortError' ? 'Request timed out. Please try a smaller document.' : err.message;
+        ticker.stop(false, 'Processing failed.');
+        showToast(`Error: ${msg}`, 'error');
       } finally {
+        clearTimeout(timeoutId);
         btnStartSingle.disabled = false;
         setTimeout(() => {
           singleProgressContainer.style.display = 'none';
           singleProgressFill.style.width = '0%';
-        }, 1000);
+        }, 1500);
       }
     });
   }

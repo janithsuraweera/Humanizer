@@ -27,22 +27,48 @@ class DocumentProcessor:
         provider: str = "local",
         api_key: str = None
     ) -> Dict[str, Any]:
-        """Humanizes raw string content preserving paragraph breaks."""
-        paragraphs = text.split("\n\n")
+        """Humanizes raw string content preserving paragraph breaks with high throughput."""
+        import re
+        # Normalize carriage returns
+        normalized = text.replace('\r\n', '\n').replace('\r', '\n')
+        
+        # Split on double newlines
+        raw_paragraphs = re.split(r'\n{2,}', normalized)
+        paragraphs = []
+        
+        # Guard against mega-paragraphs from PDFs that lack double-newlines
+        for p in raw_paragraphs:
+            p_strip = p.strip()
+            if not p_strip:
+                continue
+            if len(p_strip) > 2500:
+                # Sub-chunk by sentences
+                sentences = re.split(r'(?<=[.!?])\s+', p_strip)
+                chunk = []
+                chunk_len = 0
+                for s in sentences:
+                    chunk.append(s)
+                    chunk_len += len(s)
+                    if chunk_len >= 1200:
+                        paragraphs.append(" ".join(chunk))
+                        chunk = []
+                        chunk_len = 0
+                if chunk:
+                    paragraphs.append(" ".join(chunk))
+            else:
+                paragraphs.append(p_strip)
+
         humanized_paragraphs = []
         all_changes = []
 
-        for p in paragraphs:
-            p_strip = p.strip()
-            if not p_strip:
-                humanized_paragraphs.append("")
-                continue
+        for p_strip in paragraphs:
             res = await engine.humanize(
                 p_strip,
                 mode=mode,
                 intensity=intensity,
                 provider=provider,
-                api_key=api_key
+                api_key=api_key,
+                skip_metrics=True
             )
             humanized_paragraphs.append(res["humanized_text"])
             all_changes.extend(res.get("changes_applied", []))
@@ -87,7 +113,7 @@ class DocumentProcessor:
 
             if is_heading:
                 # For headings, apply minimal light polish without aggressive restructuring
-                res = await engine.humanize(text, mode="academic", intensity=40, provider="local")
+                res = await engine.humanize(text, mode="academic", intensity=40, provider="local", skip_metrics=True)
                 humanized_text = res["humanized_text"]
                 out_para = out_doc.add_heading(humanized_text, level=1 if "1" in style_name else 2)
             else:
@@ -96,7 +122,8 @@ class DocumentProcessor:
                     mode=mode,
                     intensity=intensity,
                     provider=provider,
-                    api_key=api_key
+                    api_key=api_key,
+                    skip_metrics=True
                 )
                 humanized_text = res["humanized_text"]
                 total_changes.extend(res.get("changes_applied", []))
@@ -112,7 +139,7 @@ class DocumentProcessor:
                 for c_idx, cell in enumerate(row.cells):
                     cell_text = cell.text.strip()
                     if cell_text:
-                        res = await engine.humanize(cell_text, mode="academic", intensity=50, provider="local")
+                        res = await engine.humanize(cell_text, mode="academic", intensity=50, provider="local", skip_metrics=True)
                         out_table.cell(r_idx, c_idx).text = res["humanized_text"]
 
         out_stream = io.BytesIO()
@@ -150,8 +177,11 @@ class DocumentProcessor:
 
         for page in reader.pages:
             t = page.extract_text()
-            if t:
-                extracted_text.append(t)
+            if t and t.strip():
+                extracted_text.append(t.strip())
+
+        if not extracted_text:
+            raise ValueError("No readable text found in this PDF. It appears to be an image-only or scanned PDF.")
 
         raw_text = "\n\n".join(extracted_text)
         proc_res = await self.process_text_content(

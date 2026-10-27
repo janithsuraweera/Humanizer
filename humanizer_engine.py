@@ -333,22 +333,34 @@ class HumanizerEngine:
         intensity: int = 75,
         provider: str = "local",
         api_key: Optional[str] = None,
-        model_name: Optional[str] = None
+        model_name: Optional[str] = None,
+        skip_metrics: bool = False
     ) -> Dict[str, Any]:
         """
         Main humanization method.
         Executes multi-pass humanization pipeline and returns structured results.
         """
         if not text.strip():
+            empty_metrics = {
+                "ai_score": 0.0,
+                "human_score": 100.0,
+                "verdict": "human",
+                "burstiness": 0.0,
+                "cliches": [],
+                "word_count": 0,
+                "sentence_count": 0,
+                "reading_ease": 100.0,
+                "sentence_breakdown": []
+            }
             return {
                 "original_text": text,
                 "humanized_text": text,
-                "metrics_before": ai_detector.analyze_text(""),
-                "metrics_after": ai_detector.analyze_text(""),
+                "metrics_before": empty_metrics,
+                "metrics_after": empty_metrics,
                 "changes_applied": []
             }
 
-        metrics_before = ai_detector.analyze_text(text)
+        metrics_before = {} if skip_metrics else ai_detector.analyze_text(text)
         current_text = text
         changes_applied = []
 
@@ -380,8 +392,8 @@ class HumanizerEngine:
         # Step 5: Post-Processing & Glitch Cleaning
         current_text = self.clean_glitches(current_text)
 
-        # Calculate final metrics
-        metrics_after = ai_detector.analyze_text(current_text)
+        # Calculate final metrics if requested
+        metrics_after = {} if skip_metrics else ai_detector.analyze_text(current_text)
 
         return {
             "original_text": text,

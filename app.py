@@ -91,36 +91,43 @@ async def api_upload_document(
 
     clean_base = os.path.splitext(filename)[0]
 
-    if ext in [".docx", ".doc"]:
-        out_bytes, meta = await doc_processor.process_docx(
-            content, mode=mode, intensity=intensity, provider=provider, api_key=api_key
-        )
-        out_filename = f"{clean_base}_humanized.docx"
-        content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    
-    elif ext == ".pdf":
-        docx_bytes, txt_bytes, meta = await doc_processor.process_pdf(
-            content, mode=mode, intensity=intensity, provider=provider, api_key=api_key
-        )
-        out_bytes = docx_bytes
-        out_filename = f"{clean_base}_humanized.docx"
-        content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    try:
+        if ext in [".docx", ".doc"]:
+            out_bytes, meta = await doc_processor.process_docx(
+                content, mode=mode, intensity=intensity, provider=provider, api_key=api_key
+            )
+            out_filename = f"{clean_base}_humanized.docx"
+            content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        
+        elif ext == ".pdf":
+            docx_bytes, txt_bytes, meta = await doc_processor.process_pdf(
+                content, mode=mode, intensity=intensity, provider=provider, api_key=api_key
+            )
+            out_bytes = docx_bytes
+            out_filename = f"{clean_base}_humanized.docx"
+            content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
-    elif ext in [".txt", ".md"]:
-        text = content.decode("utf-8", errors="ignore")
-        proc = await doc_processor.process_text_content(
-            text, mode=mode, intensity=intensity, provider=provider, api_key=api_key
-        )
-        out_bytes = proc["text"].encode("utf-8")
-        out_filename = f"{clean_base}_humanized{ext}"
-        content_type = "text/plain"
-        meta = {
-            "original_words": len(text.split()),
-            "humanized_words": len(proc["text"].split()),
-            "changes_count": len(proc["changes"])
-        }
-    else:
-        raise HTTPException(status_code=400, detail=f"Unsupported format: {ext}. Supported: .docx, .pdf, .txt, .md")
+        elif ext in [".txt", ".md"]:
+            text = content.decode("utf-8", errors="ignore")
+            proc = await doc_processor.process_text_content(
+                text, mode=mode, intensity=intensity, provider=provider, api_key=api_key
+            )
+            out_bytes = proc["text"].encode("utf-8")
+            out_filename = f"{clean_base}_humanized{ext}"
+            content_type = "text/plain"
+            meta = {
+                "original_words": len(text.split()),
+                "humanized_words": len(proc["text"].split()),
+                "changes_count": len(proc["changes"])
+            }
+        else:
+            raise HTTPException(status_code=400, detail=f"Unsupported format: {ext}. Supported: .docx, .pdf, .txt, .md")
+    except HTTPException:
+        raise
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to process document: {str(e)}")
 
     token = str(uuid.uuid4())
     DOWNLOAD_STORE[token] = {

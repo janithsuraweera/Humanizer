@@ -125,7 +125,9 @@ def analyze_text(text: str) -> Dict[str, Any]:
     # Use texthumanize detector if available
     if HAS_TEXTHUMANIZE:
         try:
-            det = texthumanize.detect_ai(cleaned_text)
+            # Sample up to 800 words for responsive detection without freezing on huge manuscripts
+            sample_text = " ".join(words[:800]) if len(words) > 800 else cleaned_text
+            det = texthumanize.detect_ai(sample_text)
             ai_score = float(det.get("score", 0.5))
             verdict = det.get("verdict", "uncertain")
         except Exception:
