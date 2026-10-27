@@ -693,6 +693,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const navEngineStatus = document.getElementById('navEngineStatus');
   const navStatusDot = document.getElementById('navStatusDot');
   const navStatusText = document.getElementById('navStatusText');
+  const navApiUsersCount = document.getElementById('navApiUsersCount');
+  const navApiUsersPill = document.getElementById('navApiUsersPill');
   const settingProvider = document.getElementById('settingProvider');
   const apiKeyGroup = document.getElementById('apiKeyGroup');
   const settingApiKey = document.getElementById('settingApiKey');
@@ -701,11 +703,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnTestApiConnection = document.getElementById('btnTestApiConnection');
   const apiKeyStatusBadge = document.getElementById('apiKeyStatusBadge');
 
+  const fetchApiUserStats = async () => {
+    try {
+      const res = await fetch('/api/user-stats');
+      if (res.ok) {
+        const data = await res.json();
+        if (navApiUsersCount && data.api_users_count !== undefined) {
+          navApiUsersCount.innerText = data.api_users_count;
+        }
+      }
+    } catch (_) {}
+  };
+
   // Clicking navbar pill opens Settings directly
   if (navEngineStatus) {
     navEngineStatus.addEventListener('click', () => {
       switchTab('tab-settings');
       showToast('Opened Engine & API Key Settings', 'info');
+    });
+  }
+
+  if (navApiUsersPill) {
+    navApiUsersPill.addEventListener('click', () => {
+      switchTab('tab-settings');
     });
   }
 
@@ -740,6 +760,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const verifyCurrentApi = async (provider, apiKey, showToasts = false) => {
     if (!provider || provider === 'local') {
       setApiStatus('local', 'Local Core (Active)', '100% Free & Unlimited Offline Engine');
+      fetchApiUserStats();
       return { status: 'ok' };
     }
 
@@ -753,6 +774,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!apiKey && provider !== 'ollama') {
       setApiStatus('error', `${pName}: No Key`, `Please enter your ${pName} API Key in Settings`);
       if (showToasts) showToast(`Please enter your ${pName} API Key.`, 'error');
+      fetchApiUserStats();
       return { status: 'error', message: 'No API key provided' };
     }
 
@@ -769,6 +791,9 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       const data = await res.json();
+      if (data.api_users_count !== undefined && navApiUsersCount) {
+        navApiUsersCount.innerText = data.api_users_count;
+      }
       if (data.status === 'ok') {
         setApiStatus('success', `${pName} Connected`, data.message || `${pName} verified and active`);
         if (showToasts) showToast(`✓ ${data.message || pName + ' connected successfully!'}`, 'success');
@@ -781,6 +806,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       setApiStatus('error', `${pName} Error`, err.message);
       if (showToasts) showToast(`Connection error: ${err.message}`, 'error');
+      fetchApiUserStats();
       return { status: 'error', message: err.message };
     }
   };

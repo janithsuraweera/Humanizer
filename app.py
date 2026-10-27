@@ -15,6 +15,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import io
 import httpx
+import json
+import hashlib
 
 import ai_detector
 from humanizer_engine import engine
@@ -49,6 +51,46 @@ class TextHumanizeRequest(BaseModel):
     api_key: Optional[str] = None
     model_name: Optional[str] = None
 
+ROOT_STATS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "humanizer_stats.json")
+TMP_STATS_FILE = "/tmp/humanizer_stats.json" if os.path.exists("/tmp") else ROOT_STATS_FILE
+
+def load_registered_api_users() -> set:
+    users = set()
+    for fpath in [ROOT_STATS_FILE, TMP_STATS_FILE]:
+        try:
+            if os.path.exists(fpath):
+                with open(fpath, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    for u in data.get("users", []):
+                        users.add(u)
+        except Exception:
+            pass
+    return users
+
+def record_api_user(provider: str, api_key: str):
+    if provider == "local" or not api_key:
+        return
+    key_hash = hashlib.sha256(f"{provider}:{api_key}".encode()).hexdigest()[:16]
+    ACTIVE_API_USERS.add(key_hash)
+    try:
+        data = {"users": list(ACTIVE_API_USERS)}
+        target = TMP_STATS_FILE if os.path.exists("/tmp") else ROOT_STATS_FILE
+        with open(target, "w", encoding="utf-8") as f:
+            json.dump(data, f)
+    except Exception:
+        pass
+
+ACTIVE_API_USERS = load_registered_api_users()
+
+@app.get("/api/user-stats")
+async def api_user_stats():
+    """Returns the total count of distinct users who have connected an API key."""
+    current_users = load_registered_api_users()
+    current_users.update(ACTIVE_API_USERS)
+    return {
+        "api_users_count": max(len(current_users), 1)
+    }
+
 class DetectRequest(BaseModel):
     text: str
 
@@ -67,7 +109,8 @@ async def api_verify_api_key(req: VerifyKeyRequest):
         return {
             "status": "ok",
             "provider": "local",
-            "message": "Local Offline Engine is ready (100% Free & Unlimited)"
+            "message": "Local Offline Engine is ready (100% Free & Unlimited)",
+            "api_users_count": max(len(ACTIVE_API_USERS), 1)
         }
 
     if not api_key and provider != "ollama":
@@ -84,10 +127,12 @@ async def api_verify_api_key(req: VerifyKeyRequest):
             async with httpx.AsyncClient(timeout=8.0) as client:
                 resp = await client.get(url)
                 if resp.status_code == 200:
+                    record_api_user(provider, api_key)
                     return {
                         "status": "ok",
                         "provider": "gemini",
-                        "message": f"Google Gemini ({model}) Connected"
+                        "message": f"Google Gemini ({model}) Connected",
+                        "api_users_count": max(len(ACTIVE_API_USERS), 1)
                     }
                 else:
                     try:
@@ -107,10 +152,12 @@ async def api_verify_api_key(req: VerifyKeyRequest):
             async with httpx.AsyncClient(timeout=8.0) as client:
                 resp = await client.get(url, headers=headers)
                 if resp.status_code == 200:
+                    record_api_user(provider, api_key)
                     return {
                         "status": "ok",
                         "provider": "groq",
-                        "message": "Groq Cloud API Connected"
+                        "message": "Groq Cloud API Connected",
+                        "api_users_count": max(len(ACTIVE_API_USERS), 1)
                     }
                 else:
                     try:
@@ -129,10 +176,12 @@ async def api_verify_api_key(req: VerifyKeyRequest):
             async with httpx.AsyncClient(timeout=4.0) as client:
                 resp = await client.get(url)
                 if resp.status_code == 200:
+                    record_api_user(provider, api_key)
                     return {
                         "status": "ok",
                         "provider": "ollama",
-                        "message": "Local Ollama Connected"
+                        "message": "Local Ollama Connected",
+                        "api_users_count": max(len(ACTIVE_API_USERS), 1)
                     }
                 else:
                     return {
