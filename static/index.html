@@ -34,9 +34,9 @@
           <span id="themeLabel">Light</span>
         </button>
 
-        <div class="engine-status-pill">
-          <span class="status-dot-pulse"></span>
-          <span>Engine Active</span>
+        <div class="engine-status-pill pill-local" id="navEngineStatus" title="Click to configure AI Engine & API Key">
+          <span class="status-dot-pulse dot-local" id="navStatusDot"></span>
+          <span id="navStatusText">Local Engine (Offline)</span>
         </div>
       </div>
     </header>
@@ -454,10 +454,14 @@
             </select>
           </div>
 
-          <div style="margin-top: 10px;">
+          <div style="margin-top: 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
             <button class="btn-primary" id="btnSaveSettings">
-              <span>Save Settings</span>
+              <span>Save & Connect</span>
             </button>
+            <button class="btn-secondary" id="btnTestApiConnection" style="display: none;">
+              <span>Test Connection</span>
+            </button>
+            <span id="apiKeyStatusBadge" style="font-size: 0.88rem; font-weight: 500; display: none;"></span>
           </div>
         </div>
       </div>

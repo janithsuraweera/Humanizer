@@ -81,14 +81,27 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabButtons = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
 
+  const switchTab = (targetId) => {
+    tabButtons.forEach(b => {
+      if (b.getAttribute('data-tab') === targetId) {
+        b.classList.add('active');
+      } else {
+        b.classList.remove('active');
+      }
+    });
+    tabContents.forEach(c => {
+      if (c.id === targetId) {
+        c.classList.add('active');
+      } else {
+        c.classList.remove('active');
+      }
+    });
+  };
+
   tabButtons.forEach(btn => {
     btn.addEventListener('click', () => {
-      tabButtons.forEach(b => b.classList.remove('active'));
-      tabContents.forEach(c => c.classList.remove('active'));
-      btn.classList.add('active');
       const targetId = btn.getAttribute('data-tab');
-      const targetPane = document.getElementById(targetId);
-      if (targetPane) targetPane.classList.add('active');
+      switchTab(targetId);
     });
   });
 
@@ -675,13 +688,102 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // TAB 5: PREFERENCES / SETTINGS
+  // TAB 5: PREFERENCES / SETTINGS & API STATUS
   // ==========================================
+  const navEngineStatus = document.getElementById('navEngineStatus');
+  const navStatusDot = document.getElementById('navStatusDot');
+  const navStatusText = document.getElementById('navStatusText');
   const settingProvider = document.getElementById('settingProvider');
   const apiKeyGroup = document.getElementById('apiKeyGroup');
   const settingApiKey = document.getElementById('settingApiKey');
   const settingDefaultMode = document.getElementById('settingDefaultMode');
   const btnSaveSettings = document.getElementById('btnSaveSettings');
+  const btnTestApiConnection = document.getElementById('btnTestApiConnection');
+  const apiKeyStatusBadge = document.getElementById('apiKeyStatusBadge');
+
+  // Clicking navbar pill opens Settings directly
+  if (navEngineStatus) {
+    navEngineStatus.addEventListener('click', () => {
+      switchTab('tab-settings');
+      showToast('Opened Engine & API Key Settings', 'info');
+    });
+  }
+
+  const setApiStatus = (state, label, detailMsg) => {
+    // state: 'local' | 'loading' | 'success' | 'error'
+    if (!navEngineStatus || !navStatusDot || !navStatusText) return;
+
+    navEngineStatus.className = `engine-status-pill pill-${state}`;
+    navStatusDot.className = `status-dot-pulse dot-${state}`;
+    navStatusText.innerText = label;
+    if (detailMsg) navEngineStatus.title = `${detailMsg} (Click to open Settings)`;
+
+    if (apiKeyStatusBadge) {
+      if (state === 'local') {
+        apiKeyStatusBadge.style.display = 'none';
+      } else if (state === 'loading') {
+        apiKeyStatusBadge.style.display = 'inline-block';
+        apiKeyStatusBadge.style.color = '#fbbf24';
+        apiKeyStatusBadge.innerText = '⏳ Verifying connection...';
+      } else if (state === 'success') {
+        apiKeyStatusBadge.style.display = 'inline-block';
+        apiKeyStatusBadge.style.color = '#10b981';
+        apiKeyStatusBadge.innerText = `✓ Connected: ${detailMsg || 'Ready'}`;
+      } else if (state === 'error') {
+        apiKeyStatusBadge.style.display = 'inline-block';
+        apiKeyStatusBadge.style.color = '#f87171';
+        apiKeyStatusBadge.innerText = `✗ Failed: ${detailMsg || 'Check API key'}`;
+      }
+    }
+  };
+
+  const verifyCurrentApi = async (provider, apiKey, showToasts = false) => {
+    if (!provider || provider === 'local') {
+      setApiStatus('local', 'Local Core (Active)', '100% Free & Unlimited Offline Engine');
+      return { status: 'ok' };
+    }
+
+    const providerNames = {
+      gemini: 'Gemini',
+      groq: 'Groq',
+      ollama: 'Ollama'
+    };
+    const pName = providerNames[provider] || provider.toUpperCase();
+
+    if (!apiKey && provider !== 'ollama') {
+      setApiStatus('error', `${pName}: No Key`, `Please enter your ${pName} API Key in Settings`);
+      if (showToasts) showToast(`Please enter your ${pName} API Key.`, 'error');
+      return { status: 'error', message: 'No API key provided' };
+    }
+
+    setApiStatus('loading', `Checking ${pName}...`, `Verifying connection to ${pName}...`);
+
+    try {
+      const res = await fetch('/api/verify-api-key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: provider,
+          api_key: apiKey
+        })
+      });
+
+      const data = await res.json();
+      if (data.status === 'ok') {
+        setApiStatus('success', `${pName} Connected`, data.message || `${pName} verified and active`);
+        if (showToasts) showToast(`✓ ${data.message || pName + ' connected successfully!'}`, 'success');
+        return data;
+      } else {
+        setApiStatus('error', `${pName} Invalid`, data.message || `Could not connect to ${pName}`);
+        if (showToasts) showToast(`✗ ${data.message || 'API connection failed'}`, 'error');
+        return data;
+      }
+    } catch (err) {
+      setApiStatus('error', `${pName} Error`, err.message);
+      if (showToasts) showToast(`Connection error: ${err.message}`, 'error');
+      return { status: 'error', message: err.message };
+    }
+  };
 
   if (settingProvider) {
     settingProvider.value = settings.provider;
@@ -689,8 +791,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const val = settingProvider.value;
       if (val === 'gemini' || val === 'groq') {
         apiKeyGroup.style.display = 'flex';
+        if (btnTestApiConnection) btnTestApiConnection.style.display = 'inline-flex';
+      } else if (val === 'ollama') {
+        apiKeyGroup.style.display = 'flex';
+        if (btnTestApiConnection) btnTestApiConnection.style.display = 'inline-flex';
       } else {
         apiKeyGroup.style.display = 'none';
+        if (btnTestApiConnection) btnTestApiConnection.style.display = 'none';
+        if (apiKeyStatusBadge) apiKeyStatusBadge.style.display = 'none';
+        setApiStatus('local', 'Local Core (Active)', '100% Free & Unlimited Offline Engine');
       }
     };
     settingProvider.addEventListener('change', toggleApiKeyVisibility);
@@ -700,8 +809,23 @@ document.addEventListener('DOMContentLoaded', () => {
   if (settingApiKey) settingApiKey.value = settings.apiKey;
   if (settingDefaultMode) settingDefaultMode.value = settings.defaultMode;
 
+  if (btnTestApiConnection) {
+    btnTestApiConnection.addEventListener('click', async () => {
+      const prov = settingProvider ? settingProvider.value : settings.provider;
+      const key = settingApiKey ? settingApiKey.value.trim() : settings.apiKey;
+      btnTestApiConnection.disabled = true;
+      btnTestApiConnection.querySelector('span').innerText = 'Testing...';
+      try {
+        await verifyCurrentApi(prov, key, true);
+      } finally {
+        btnTestApiConnection.disabled = false;
+        btnTestApiConnection.querySelector('span').innerText = 'Test Connection';
+      }
+    });
+  }
+
   if (btnSaveSettings) {
-    btnSaveSettings.addEventListener('click', () => {
+    btnSaveSettings.addEventListener('click', async () => {
       settings.provider = settingProvider.value;
       settings.apiKey = settingApiKey.value.trim();
       settings.defaultMode = settingDefaultMode.value;
@@ -710,8 +834,20 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('humanize_api_key', settings.apiKey);
       localStorage.setItem('humanize_mode', settings.defaultMode);
 
-      showToast('Settings saved successfully!', 'success');
+      btnSaveSettings.disabled = true;
+      const origText = btnSaveSettings.querySelector('span').innerText;
+      btnSaveSettings.querySelector('span').innerText = 'Connecting...';
+
+      try {
+        await verifyCurrentApi(settings.provider, settings.apiKey, true);
+      } finally {
+        btnSaveSettings.disabled = false;
+        btnSaveSettings.querySelector('span').innerText = origText;
+      }
     });
   }
+
+  // Initial check on page load
+  verifyCurrentApi(settings.provider, settings.apiKey, false);
 
 });

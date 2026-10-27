@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import io
+import httpx
 
 import ai_detector
 from humanizer_engine import engine
@@ -50,6 +51,114 @@ class TextHumanizeRequest(BaseModel):
 
 class DetectRequest(BaseModel):
     text: str
+
+class VerifyKeyRequest(BaseModel):
+    provider: str
+    api_key: Optional[str] = None
+    model_name: Optional[str] = None
+
+@app.post("/api/verify-api-key")
+async def api_verify_api_key(req: VerifyKeyRequest):
+    """Verifies whether an AI API Key (Gemini, Groq, Ollama) is valid and connected."""
+    provider = req.provider.lower().strip()
+    api_key = (req.api_key or "").strip()
+
+    if provider == "local":
+        return {
+            "status": "ok",
+            "provider": "local",
+            "message": "Local Offline Engine is ready (100% Free & Unlimited)"
+        }
+
+    if not api_key and provider != "ollama":
+        return {
+            "status": "error",
+            "provider": provider,
+            "message": f"API Key is required for {provider.upper()}."
+        }
+
+    try:
+        if provider == "gemini":
+            model = req.model_name or "gemini-2.0-flash"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}?key={api_key}"
+            async with httpx.AsyncClient(timeout=8.0) as client:
+                resp = await client.get(url)
+                if resp.status_code == 200:
+                    return {
+                        "status": "ok",
+                        "provider": "gemini",
+                        "message": f"Google Gemini ({model}) Connected"
+                    }
+                else:
+                    try:
+                        data = resp.json()
+                        err_msg = data.get("error", {}).get("message", "Invalid Gemini API Key")
+                    except Exception:
+                        err_msg = f"Gemini returned HTTP {resp.status_code}"
+                    return {
+                        "status": "error",
+                        "provider": "gemini",
+                        "message": err_msg
+                    }
+
+        elif provider == "groq":
+            url = "https://api.groq.com/openai/v1/models"
+            headers = {"Authorization": f"Bearer {api_key}"}
+            async with httpx.AsyncClient(timeout=8.0) as client:
+                resp = await client.get(url, headers=headers)
+                if resp.status_code == 200:
+                    return {
+                        "status": "ok",
+                        "provider": "groq",
+                        "message": "Groq Cloud API Connected"
+                    }
+                else:
+                    try:
+                        data = resp.json()
+                        err_msg = data.get("error", {}).get("message", "Invalid Groq API Key")
+                    except Exception:
+                        err_msg = f"Groq returned HTTP {resp.status_code}"
+                    return {
+                        "status": "error",
+                        "provider": "groq",
+                        "message": err_msg
+                    }
+
+        elif provider == "ollama":
+            url = f"{api_key or 'http://localhost:11434'}/api/tags"
+            async with httpx.AsyncClient(timeout=4.0) as client:
+                resp = await client.get(url)
+                if resp.status_code == 200:
+                    return {
+                        "status": "ok",
+                        "provider": "ollama",
+                        "message": "Local Ollama Connected"
+                    }
+                else:
+                    return {
+                        "status": "error",
+                        "provider": "ollama",
+                        "message": f"Ollama returned HTTP {resp.status_code}"
+                    }
+
+        return {
+            "status": "error",
+            "provider": provider,
+            "message": f"Unknown provider: {provider}"
+        }
+
+    except httpx.ConnectError:
+        return {
+            "status": "error",
+            "provider": provider,
+            "message": f"Cannot reach {provider.upper()} server. Check connection."
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "provider": provider,
+            "message": str(e)
+        }
 
 @app.post("/api/detect")
 async def api_detect(req: DetectRequest):
