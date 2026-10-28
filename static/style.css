@@ -1823,3 +1823,137 @@ body {
   box-shadow: 0 4px 14px rgba(0,0,0,0.55);
   border: 1px solid var(--border-default);
 }
+
+/* ==========================================================================
+   DOCUMENT AUDIT & AI FORENSIC SCANNER STYLES
+   ========================================================================== */
+.audit-summary-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 22px 24px;
+  margin-bottom: 20px;
+}
+
+.audit-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.audit-doc-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.audit-doc-sub {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  margin-top: 3px;
+}
+
+.audit-verdict-pill {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+}
+
+.audit-verdict-pill.verdict-human {
+  background: rgba(16, 185, 129, 0.16);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
+}
+
+.audit-verdict-pill.verdict-mixed {
+  background: rgba(245, 158, 11, 0.16);
+  color: #fcd34d;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.25);
+}
+
+.audit-verdict-pill.verdict-ai {
+  background: rgba(239, 68, 68, 0.16);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.25);
+}
+
+.audit-meter-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.audit-meter-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.meter-stat {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.meter-stat.green { color: #34d399; }
+.meter-stat.red { color: #f87171; }
+
+.meter-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.meter-dot.green { background: #10b981; box-shadow: 0 0 8px #10b981; }
+.meter-dot.red { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+
+.meter-value {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.audit-split-track {
+  width: 100%;
+  height: 12px;
+  background: var(--bg-canvas);
+  border-radius: 9999px;
+  overflow: hidden;
+  display: flex;
+  border: 1px solid var(--border-subtle);
+}
+
+.audit-split-fill-human {
+  background: linear-gradient(90deg, #10b981, #059669);
+  height: 100%;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.audit-split-fill-ai {
+  background: linear-gradient(90deg, #dc2626, #ef4444);
+  height: 100%;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.spinner-orbit {
+  width: 26px;
+  height: 26px;
+  border: 3px solid rgba(99, 102, 241, 0.2);
+  border-top-color: var(--accent-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

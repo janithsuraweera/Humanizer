@@ -76,7 +76,7 @@
         Text Editor
       </button>
       <button class="tab-btn" data-tab="tab-detector" id="tabBtnDetector">
-        AI Scanner
+        AI &amp; Human Audit
       </button>
       <button class="tab-btn" data-tab="tab-settings" id="tabBtnSettings">
         Settings
@@ -715,47 +715,208 @@
       </div>
     </section>
 
-    <!-- TAB 4: FORENSIC SCANNER -->
+    <!-- TAB 4: FORENSIC SCANNER & DOCUMENT AUDIT -->
     <section class="tab-content" id="tab-detector">
       <div class="surface-panel">
         <div class="panel-header">
-          <h2 class="panel-title">AI Detection Scanner</h2>
-          <p class="panel-description">Analyze text against neural perplexity patterns, n-gram predictability, and uniform sentence structures.</p>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px;">
+            <div>
+              <h2 class="panel-title">Document AI &amp; Human Content Audit Scanner</h2>
+              <p class="panel-description">Upload any document (.docx, .pdf, .txt) or paste passage to audit human authenticity vs AI content percentage with deep forensic breakdown.</p>
+            </div>
+            <!-- Mode Toggle: File Upload vs Raw Text -->
+            <div class="pane-view-toggle" id="detectorModeToggle" style="padding: 4px 6px;">
+              <button type="button" class="view-chip active" id="btnDetectorModeFile">📄 Upload Document</button>
+              <button type="button" class="view-chip" id="btnDetectorModeText">✏️ Paste Text</button>
+            </div>
+          </div>
         </div>
 
-        <textarea class="editor-area" id="detectorInputText" style="height: 160px; background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);" placeholder="Paste passage here to evaluate..."></textarea>
-        
-        <div style="margin-top: 16px;">
-          <button class="btn-primary" id="btnScanAI">
-            <span>Scan Passage</span>
-          </button>
+        <!-- Mode A: File Upload Dropzone -->
+        <div id="detectorFileSection">
+          <div class="upload-dropzone" id="detectorDropzone">
+            <div class="dropzone-heading">Choose file or drag and drop here to audit</div>
+            <div class="dropzone-subtext">Word (.docx), PDF (.pdf), or plain text (.txt, .md)</div>
+            <div class="format-tags">
+              <span class="format-tag">.DOCX</span>
+              <span class="format-tag">.PDF</span>
+              <span class="format-tag">.TXT</span>
+            </div>
+            <input type="file" id="detectorFileInput" class="file-input" accept=".docx,.pdf,.txt,.md">
+          </div>
+
+          <div id="detectorFileSelectedArea" style="display: none; margin-top: 18px;">
+            <div class="file-item">
+              <div class="file-info">
+                <span class="file-ext-badge" id="detectorFileBadge">.DOCX</span>
+                <div>
+                  <div class="file-name" id="detectorSelectedName">manuscript.docx</div>
+                  <div class="file-size" id="detectorSelectedSize">0 KB</div>
+                </div>
+              </div>
+              <button class="file-remove-btn" id="btnCancelDetectorFile" title="Remove file">Remove</button>
+            </div>
+
+            <div style="margin-top: 18px;">
+              <button class="btn-primary" id="btnScanDocument">
+                <span>🔍 Scan &amp; Generate Audit Report</span>
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div id="detectorResults" style="display: none; margin-top: 24px;">
-          <div class="telemetry-grid">
-            <div class="telemetry-card">
-              <div class="telemetry-label">Estimated Human Score</div>
-              <div class="telemetry-value" id="detHumanScore">--%</div>
+        <!-- Mode B: Raw Text Input -->
+        <div id="detectorTextSection" style="display: none;">
+          <textarea class="editor-area" id="detectorInputText" style="height: 180px; background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);" placeholder="Paste draft or synthesized passage here to audit..."></textarea>
+          
+          <div style="margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn-primary" id="btnScanAI">
+              <span>🔍 Scan Passage</span>
+            </button>
+            <button class="btn-secondary" id="btnPasteSampleDetector">Load AI Sample</button>
+            <button class="btn-secondary" id="btnClearDetector">Clear</button>
+          </div>
+        </div>
+
+        <!-- Scanning Progress Indicator -->
+        <div id="detectorProgressArea" style="display: none; margin-top: 24px;">
+          <div class="process-matrix-card" style="padding: 18px 20px;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <div class="spinner-orbit"></div>
+              <div>
+                <div style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">Auditing Document Authenticity...</div>
+                <div id="detectorProgressStatus" style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 2px;">Extracting tokens and evaluating neural perplexity...</div>
+              </div>
             </div>
-            <div class="telemetry-card">
-              <div class="telemetry-label">AI Probability</div>
-              <div class="telemetry-value" id="detAIScore">--%</div>
+          </div>
+        </div>
+
+        <!-- Forensic Audit Report Results -->
+        <div id="detectorResults" style="display: none; margin-top: 28px;">
+          <!-- Executive Ratio & Verdict Banner -->
+          <div class="audit-summary-box">
+            <div class="audit-summary-header">
+              <div>
+                <div class="audit-doc-title" id="auditDocTitle">Document Audit Report</div>
+                <div class="audit-doc-sub" id="auditDocSub">Processed 0 words across 0 sentences</div>
+              </div>
+              <div id="auditVerdictBadge" class="audit-verdict-pill">--</div>
             </div>
-            <div class="telemetry-card">
-              <div class="telemetry-label">Burstiness Variance</div>
-              <div class="telemetry-value" id="detBurstiness">--</div>
-            </div>
-            <div class="telemetry-card">
-              <div class="telemetry-label">Reading Ease Score</div>
-              <div class="telemetry-value" id="detReadingEase">--</div>
+
+            <!-- Dual Split Authenticity Bar -->
+            <div class="audit-meter-wrapper">
+              <div class="audit-meter-labels">
+                <div class="meter-stat green">
+                  <span class="meter-dot green"></span>
+                  <span class="meter-label">Humanized Content:</span>
+                  <span class="meter-value" id="auditHumanPercent">--%</span>
+                </div>
+                <div class="meter-stat red">
+                  <span class="meter-dot red"></span>
+                  <span class="meter-label">AI Generated Content:</span>
+                  <span class="meter-value" id="auditAIPercent">--%</span>
+                </div>
+              </div>
+              <div class="audit-split-track">
+                <div class="audit-split-fill-human" id="auditFillHuman" style="width: 50%;"></div>
+                <div class="audit-split-fill-ai" id="auditFillAI" style="width: 50%;"></div>
+              </div>
             </div>
           </div>
 
-          <div style="margin-top: 28px;">
-            <div style="font-size: 0.88rem; font-weight: 600; color: var(--text-primary); margin-bottom: 10px;">
-              Sentence-by-Sentence Risk Breakdown:
+          <!-- Telemetry 4-Card Grid -->
+          <div class="telemetry-grid">
+            <div class="telemetry-card">
+              <div class="telemetry-label">Human Authenticity</div>
+              <div class="telemetry-value val-green" id="detHumanScore">--%</div>
+              <div class="telemetry-subtext">Estimated human authorship</div>
             </div>
-            <div class="sentence-breakdown-list" id="detSentenceList"></div>
+            <div class="telemetry-card">
+              <div class="telemetry-label">AI Probability</div>
+              <div class="telemetry-value val-rose" id="detAIScore">--%</div>
+              <div class="telemetry-subtext">Statistical neural certainty</div>
+            </div>
+            <div class="telemetry-card">
+              <div class="telemetry-label">Burstiness Index</div>
+              <div class="telemetry-value val-indigo" id="detBurstiness">--</div>
+              <div class="telemetry-subtext">High variance (&gt;5.0) = Human</div>
+            </div>
+            <div class="telemetry-card">
+              <div class="telemetry-label">AI Clichés Found</div>
+              <div class="telemetry-value val-amber" id="detClichesCount">0</div>
+              <div class="telemetry-subtext">Turnitin trigger patterns</div>
+            </div>
+          </div>
+
+          <!-- Document Highlighting Section -->
+          <div style="margin-top: 26px;">
+            <div class="highlight-controls-bar">
+              <div class="highlight-toggle-wrap">
+                <span class="highlight-toggle-label">Plagiarism &amp; AI Marker Scanner:</span>
+                <label class="switch-control" title="Toggle AI Plagiarism Markers Highlighting">
+                  <input type="checkbox" id="chkDetectorHighlight" checked>
+                  <span class="switch-slider"></span>
+                </label>
+                <span class="switch-status-pill" id="detectorHighlightPill">ON</span>
+              </div>
+
+              <!-- Color Legend Chips -->
+              <div class="highlight-legend" id="detectorHighlightLegend">
+                <div class="legend-chip legend-red" title="Words heavily flagged by Turnitin &amp; GPTZero">
+                  <span class="legend-dot red"></span>
+                  <span>High Risk (Plagiarism/AI Flag)</span>
+                </div>
+                <div class="legend-chip legend-yellow" title="Common transitional AI patterns">
+                  <span class="legend-dot yellow"></span>
+                  <span>Medium Risk (Predictable AI)</span>
+                </div>
+                <div class="legend-chip legend-green" title="Human sentence variance and verified cadence">
+                  <span class="legend-dot green"></span>
+                  <span>Low Risk (Verified Human Flow)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Highlighted Document Passage Box -->
+            <div class="editor-pane" style="margin-top: 14px;">
+              <div class="editor-pane-header">
+                <span class="editor-pane-title">Scanned Document Content</span>
+                <div class="pane-view-toggle">
+                  <button type="button" class="view-chip active" id="btnDetectorViewHighlight">🔍 Highlights</button>
+                  <button type="button" class="view-chip" id="btnDetectorViewRaw">📄 Raw Text</button>
+                </div>
+                <span class="editor-pane-counter" id="detectorTextStats">0 words</span>
+              </div>
+              <div class="editor-pane-body" style="height: 320px;">
+                <textarea class="editor-area" id="detectorAuditText" readonly></textarea>
+                <div class="editor-area-highlight" id="detectorHighlightDisplay"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sentence-by-Sentence Breakdown -->
+          <div style="margin-top: 28px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+              <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary);">
+                Sentence-by-Sentence Forensic Audit:
+              </div>
+              <div class="pane-view-toggle" id="sentenceFilterBar">
+                <button type="button" class="view-chip active" data-filter="all">All</button>
+                <button type="button" class="view-chip" data-filter="high" style="color: #fca5a5;">High Risk Only</button>
+                <button type="button" class="view-chip" data-filter="medium" style="color: #fcd34d;">Medium</button>
+                <button type="button" class="view-chip" data-filter="low" style="color: #6ee7b7;">Low Risk</button>
+              </div>
+            </div>
+            <div class="sentence-breakdown-list" id="detSentenceList" style="max-height: 420px; overflow-y: auto;"></div>
+          </div>
+
+          <!-- Action Buttons / Report Export -->
+          <div style="display: flex; gap: 12px; margin-top: 26px; align-items: center; flex-wrap: wrap; padding-top: 20px; border-top: 1px solid var(--border-subtle);">
+            <button type="button" class="btn-secondary" id="btnCopyDetectorReport">📋 Copy Audit Report</button>
+            <button type="button" class="btn-secondary" id="btnDownloadDetectorReport">📥 Download Report (.txt)</button>
+            <button type="button" class="btn-primary" id="btnSendToHumanizer" style="margin-left: auto;">
+              <span>⚡ Humanize This Document Now →</span>
+            </button>
           </div>
         </div>
       </div>

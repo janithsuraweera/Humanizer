@@ -17,6 +17,8 @@ import io
 import httpx
 import json
 import hashlib
+import docx
+import pypdf
 
 import ai_detector
 from humanizer_engine import engine
@@ -216,6 +218,62 @@ async def api_detect(req: DetectRequest):
         raise HTTPException(status_code=400, detail="Text cannot be empty.")
     report = ai_detector.analyze_text(req.text)
     return report
+
+@app.post("/api/scan-document")
+async def api_scan_document(
+    file: UploadFile = File(...)
+):
+    """
+    Extracts text from an uploaded document (.docx, .pdf, .txt, .md)
+    and performs a full forensic AI vs Human detection audit.
+    """
+    filename = file.filename
+    ext = os.path.splitext(filename)[1].lower()
+    content = await file.read()
+
+    extracted_text = ""
+    try:
+        if ext in [".docx", ".doc"]:
+            in_stream = io.BytesIO(content)
+            doc = docx.Document(in_stream)
+            paras = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
+            for table in doc.tables:
+                for row in table.rows:
+                    for cell in row.cells:
+                        ct = cell.text.strip()
+                        if ct and ct not in paras:
+                            paras.append(ct)
+            extracted_text = "\n\n".join(paras)
+
+        elif ext == ".pdf":
+            in_stream = io.BytesIO(content)
+            reader = pypdf.PdfReader(in_stream)
+            pages = [p.extract_text().strip() for p in reader.pages if p.extract_text() and p.extract_text().strip()]
+            extracted_text = "\n\n".join(pages)
+
+        elif ext in [".txt", ".md"]:
+            extracted_text = content.decode("utf-8", errors="ignore").strip()
+
+        else:
+            raise HTTPException(status_code=400, detail=f"Unsupported format: {ext}. Supported: .docx, .pdf, .txt, .md")
+
+        if not extracted_text:
+            raise HTTPException(status_code=400, detail="No readable text found in document.")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to extract document text: {str(e)}")
+
+    # Analyze with ai_detector
+    report = ai_detector.analyze_text(extracted_text)
+
+    return {
+        "filename": filename,
+        "filesize": len(content),
+        "text_preview": extracted_text[:40000],
+        "report": report
+    }
 
 @app.post("/api/humanize-text")
 async def api_humanize_text(req: TextHumanizeRequest):

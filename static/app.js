@@ -1258,12 +1258,328 @@ document.addEventListener('DOMContentLoaded', () => {
   updateHighlightDisplays();
 
   // ==========================================
-  // TAB 4: FORENSIC SCANNER
+  // TAB 4: FORENSIC SCANNER & DOCUMENT AUDIT
   // ==========================================
+  const btnDetectorModeFile = document.getElementById('btnDetectorModeFile');
+  const btnDetectorModeText = document.getElementById('btnDetectorModeText');
+  const detectorFileSection = document.getElementById('detectorFileSection');
+  const detectorTextSection = document.getElementById('detectorTextSection');
+  const detectorDropzone = document.getElementById('detectorDropzone');
+  const detectorFileInput = document.getElementById('detectorFileInput');
+  const detectorFileSelectedArea = document.getElementById('detectorFileSelectedArea');
+  const detectorFileBadge = document.getElementById('detectorFileBadge');
+  const detectorSelectedName = document.getElementById('detectorSelectedName');
+  const detectorSelectedSize = document.getElementById('detectorSelectedSize');
+  const btnCancelDetectorFile = document.getElementById('btnCancelDetectorFile');
+  const btnScanDocument = document.getElementById('btnScanDocument');
   const detectorInputText = document.getElementById('detectorInputText');
   const btnScanAI = document.getElementById('btnScanAI');
+  const btnPasteSampleDetector = document.getElementById('btnPasteSampleDetector');
+  const btnClearDetector = document.getElementById('btnClearDetector');
+  const detectorProgressArea = document.getElementById('detectorProgressArea');
   const detectorResults = document.getElementById('detectorResults');
 
+  // Audit Report Elements
+  const auditDocTitle = document.getElementById('auditDocTitle');
+  const auditDocSub = document.getElementById('auditDocSub');
+  const auditVerdictBadge = document.getElementById('auditVerdictBadge');
+  const auditHumanPercent = document.getElementById('auditHumanPercent');
+  const auditAIPercent = document.getElementById('auditAIPercent');
+  const auditFillHuman = document.getElementById('auditFillHuman');
+  const auditFillAI = document.getElementById('auditFillAI');
+  const detHumanScore = document.getElementById('detHumanScore');
+  const detAIScore = document.getElementById('detAIScore');
+  const detBurstiness = document.getElementById('detBurstiness');
+  const detClichesCount = document.getElementById('detClichesCount');
+  const detectorTextStats = document.getElementById('detectorTextStats');
+  const detectorAuditText = document.getElementById('detectorAuditText');
+  const detectorHighlightDisplay = document.getElementById('detectorHighlightDisplay');
+  const chkDetectorHighlight = document.getElementById('chkDetectorHighlight');
+  const detectorHighlightPill = document.getElementById('detectorHighlightPill');
+  const detectorHighlightLegend = document.getElementById('detectorHighlightLegend');
+  const btnDetectorViewHighlight = document.getElementById('btnDetectorViewHighlight');
+  const btnDetectorViewRaw = document.getElementById('btnDetectorViewRaw');
+  const sentenceFilterBar = document.getElementById('sentenceFilterBar');
+  const detSentenceList = document.getElementById('detSentenceList');
+  const btnCopyDetectorReport = document.getElementById('btnCopyDetectorReport');
+  const btnDownloadDetectorReport = document.getElementById('btnDownloadDetectorReport');
+  const btnSendToHumanizer = document.getElementById('btnSendToHumanizer');
+
+  let detectorSelectedFile = null;
+  let detectorActiveMode = 'file'; // 'file' or 'text'
+  let isDetectorHighlightActive = true;
+  let detectorViewMode = 'highlight'; // 'highlight' or 'raw'
+  let latestAuditData = null;
+
+  // Toggle Mode (File vs Text)
+  if (btnDetectorModeFile && btnDetectorModeText) {
+    btnDetectorModeFile.addEventListener('click', () => {
+      detectorActiveMode = 'file';
+      btnDetectorModeFile.classList.add('active');
+      btnDetectorModeText.classList.remove('active');
+      if (detectorFileSection) detectorFileSection.style.display = 'block';
+      if (detectorTextSection) detectorTextSection.style.display = 'none';
+    });
+    btnDetectorModeText.addEventListener('click', () => {
+      detectorActiveMode = 'text';
+      btnDetectorModeText.classList.add('active');
+      btnDetectorModeFile.classList.remove('active');
+      if (detectorFileSection) detectorFileSection.style.display = 'none';
+      if (detectorTextSection) detectorTextSection.style.display = 'block';
+    });
+  }
+
+  // File Selection in Detector
+  const setDetectorFile = (file) => {
+    detectorSelectedFile = file;
+    const ext = file.name.split('.').pop().toUpperCase();
+    if (detectorFileBadge) detectorFileBadge.innerText = '.' + ext;
+    if (detectorSelectedName) detectorSelectedName.innerText = file.name;
+    const sizeKB = (file.size / 1024).toFixed(1);
+    const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+    if (detectorSelectedSize) {
+      detectorSelectedSize.innerText = file.size > 1024 * 1024 ? `${sizeMB} MB` : `${sizeKB} KB`;
+    }
+    if (detectorFileSelectedArea) detectorFileSelectedArea.style.display = 'block';
+    if (detectorResults) detectorResults.style.display = 'none';
+  };
+
+  if (detectorDropzone && detectorFileInput) {
+    detectorDropzone.addEventListener('click', () => detectorFileInput.click());
+    detectorDropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      detectorDropzone.classList.add('dragover');
+    });
+    detectorDropzone.addEventListener('dragleave', () => detectorDropzone.classList.remove('dragover'));
+    detectorDropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      detectorDropzone.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        setDetectorFile(e.dataTransfer.files[0]);
+      }
+    });
+    detectorFileInput.addEventListener('change', () => {
+      if (detectorFileInput.files && detectorFileInput.files[0]) {
+        setDetectorFile(detectorFileInput.files[0]);
+      }
+    });
+  }
+
+  if (btnCancelDetectorFile) {
+    btnCancelDetectorFile.addEventListener('click', () => {
+      detectorSelectedFile = null;
+      if (detectorFileInput) detectorFileInput.value = '';
+      if (detectorFileSelectedArea) detectorFileSelectedArea.style.display = 'none';
+    });
+  }
+
+  if (btnPasteSampleDetector && detectorInputText) {
+    btnPasteSampleDetector.addEventListener('click', () => {
+      detectorInputText.value = "Furthermore, it is crucial to delve into the intricate tapestry of modern artificial intelligence. It represents a paradigm shift in computing. Additionally, machine learning algorithms play a pivotal role in shaping society. In conclusion, one must acknowledge the profound implications of this technological revolution.";
+    });
+  }
+
+  if (btnClearDetector && detectorInputText) {
+    btnClearDetector.addEventListener('click', () => {
+      detectorInputText.value = '';
+      if (detectorResults) detectorResults.style.display = 'none';
+    });
+  }
+
+  // Update Highlight View in Detector
+  const updateDetectorHighlightView = () => {
+    if (!detectorHighlightDisplay || !detectorAuditText) return;
+
+    if (!isDetectorHighlightActive) {
+      detectorHighlightDisplay.style.display = 'none';
+      detectorAuditText.style.display = 'block';
+      return;
+    }
+
+    if (detectorViewMode === 'highlight') {
+      detectorHighlightDisplay.innerHTML = renderRiskHighlights(detectorAuditText.value, false);
+      detectorHighlightDisplay.style.display = 'block';
+      detectorAuditText.style.display = 'none';
+      if (btnDetectorViewHighlight) btnDetectorViewHighlight.classList.add('active');
+      if (btnDetectorViewRaw) btnDetectorViewRaw.classList.remove('active');
+    } else {
+      detectorHighlightDisplay.style.display = 'none';
+      detectorAuditText.style.display = 'block';
+      if (btnDetectorViewHighlight) btnDetectorViewHighlight.classList.remove('active');
+      if (btnDetectorViewRaw) btnDetectorViewRaw.classList.add('active');
+    }
+  };
+
+  if (chkDetectorHighlight) {
+    chkDetectorHighlight.addEventListener('change', () => {
+      isDetectorHighlightActive = chkDetectorHighlight.checked;
+      if (detectorHighlightPill) {
+        detectorHighlightPill.innerText = isDetectorHighlightActive ? 'ON' : 'OFF';
+        if (isDetectorHighlightActive) {
+          detectorHighlightPill.classList.remove('off');
+        } else {
+          detectorHighlightPill.classList.add('off');
+        }
+      }
+      if (detectorHighlightLegend) {
+        if (isDetectorHighlightActive) {
+          detectorHighlightLegend.classList.remove('disabled');
+        } else {
+          detectorHighlightLegend.classList.add('disabled');
+        }
+      }
+      updateDetectorHighlightView();
+      showToast(`Audit Risk Highlighter ${isDetectorHighlightActive ? 'Activated' : 'Disabled'}`, 'info');
+    });
+  }
+
+  if (btnDetectorViewHighlight) {
+    btnDetectorViewHighlight.addEventListener('click', () => {
+      detectorViewMode = 'highlight';
+      updateDetectorHighlightView();
+    });
+  }
+  if (btnDetectorViewRaw) {
+    btnDetectorViewRaw.addEventListener('click', () => {
+      detectorViewMode = 'raw';
+      updateDetectorHighlightView();
+    });
+  }
+
+  // Render Full Audit Report UI
+  const renderAuditReport = (report, title, text) => {
+    latestAuditData = { report, title, text };
+
+    if (auditDocTitle) auditDocTitle.innerText = title;
+    if (auditDocSub) auditDocSub.innerText = `Analyzed ${report.word_count || 0} words across ${report.sentence_count || 0} sentences.`;
+
+    const humanPct = report.human_score || 0;
+    const aiPct = (report.ai_score * 100).toFixed(1);
+
+    if (auditHumanPercent) auditHumanPercent.innerText = `${humanPct}%`;
+    if (auditAIPercent) auditAIPercent.innerText = `${aiPct}%`;
+    if (auditFillHuman) auditFillHuman.style.width = `${humanPct}%`;
+    if (auditFillAI) auditFillAI.style.width = `${Math.max(0, 100 - humanPct)}%`;
+
+    // Verdict Badge
+    if (auditVerdictBadge) {
+      if (humanPct >= 80) {
+        auditVerdictBadge.className = 'audit-verdict-pill verdict-human';
+        auditVerdictBadge.innerText = '✅ 100% HUMAN-WRITTEN';
+      } else if (humanPct >= 45) {
+        auditVerdictBadge.className = 'audit-verdict-pill verdict-mixed';
+        auditVerdictBadge.innerText = '⚠️ MIXED / PARTIALLY AI';
+      } else {
+        auditVerdictBadge.className = 'audit-verdict-pill verdict-ai';
+        auditVerdictBadge.innerText = '🚨 HIGH AI PROBABILITY';
+      }
+    }
+
+    // Telemetry Cards
+    if (detHumanScore) {
+      detHumanScore.innerText = `${humanPct}%`;
+      detHumanScore.className = `telemetry-value ${humanPct >= 80 ? 'val-green' : humanPct >= 45 ? 'val-amber' : 'val-rose'}`;
+    }
+    if (detAIScore) detAIScore.innerText = `${aiPct}%`;
+    if (detBurstiness) detBurstiness.innerText = `${report.burstiness || 0}`;
+    if (detClichesCount) detClichesCount.innerText = `${(report.cliches || []).length}`;
+
+    // Highlight Box
+    if (detectorAuditText) detectorAuditText.value = text;
+    if (detectorTextStats) detectorTextStats.innerText = `${report.word_count || 0} words • ${report.sentence_count || 0} sentences`;
+    detectorViewMode = 'highlight';
+    updateDetectorHighlightView();
+
+    // Sentence List & Filters
+    const renderSentences = (filter = 'all') => {
+      if (!detSentenceList) return;
+      detSentenceList.innerHTML = '';
+      const breakdown = report.sentence_breakdown || [];
+      const filtered = filter === 'all' 
+        ? breakdown 
+        : breakdown.filter(s => s.risk === filter);
+
+      if (filtered.length === 0) {
+        detSentenceList.innerHTML = `<div style="padding: 16px; color: var(--text-tertiary); font-style: italic;">No sentences match the '${filter}' filter.</div>`;
+        return;
+      }
+
+      filtered.forEach(s => {
+        const item = document.createElement('div');
+        item.className = `sentence-item risk-${s.risk}`;
+        const clichesHtml = s.cliches && s.cliches.length > 0 
+          ? `<div style="margin-top: 4px; font-size: 11px; color: #fca5a5; font-weight: 600;">Flagged AI Clichés: ${s.cliches.join(', ')}</div>` 
+          : '';
+        item.innerHTML = `
+          <div>
+            <span>${escapeHtml(s.text)}</span>
+            ${clichesHtml}
+          </div>
+          <span style="font-family: var(--font-mono); font-size: 11px; white-space: nowrap; color: var(--text-tertiary); min-width: 90px; text-align: right;">
+            ${s.word_count}w • ${s.risk.toUpperCase()}
+          </span>
+        `;
+        detSentenceList.appendChild(item);
+      });
+    };
+
+    renderSentences('all');
+
+    // Filter Buttons
+    if (sentenceFilterBar) {
+      const filterBtns = sentenceFilterBar.querySelectorAll('button');
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          renderSentences(btn.dataset.filter);
+        });
+      });
+    }
+
+    if (detectorResults) detectorResults.style.display = 'block';
+  };
+
+  // Scan Document File Upload
+  if (btnScanDocument) {
+    btnScanDocument.addEventListener('click', async () => {
+      if (!detectorSelectedFile) {
+        showToast('Please select a document file (.docx, .pdf, .txt) first.', 'error');
+        return;
+      }
+
+      btnScanDocument.disabled = true;
+      if (detectorResults) detectorResults.style.display = 'none';
+      if (detectorProgressArea) detectorProgressArea.style.display = 'block';
+
+      const formData = new FormData();
+      formData.append('file', detectorSelectedFile);
+
+      try {
+        const res = await fetch('/api/scan-document', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ detail: 'Failed to scan document.' }));
+          throw new Error(err.detail || 'Document audit failed.');
+        }
+
+        const data = await res.json();
+        renderAuditReport(data.report, data.filename, data.text_preview);
+        showToast('Document Audit Complete!', 'success');
+
+      } catch (err) {
+        showToast(`Audit Error: ${err.message}`, 'error');
+      } finally {
+        btnScanDocument.disabled = false;
+        if (detectorProgressArea) detectorProgressArea.style.display = 'none';
+      }
+    });
+  }
+
+  // Scan Raw Text Passage
   if (btnScanAI && detectorInputText) {
     btnScanAI.addEventListener('click', async () => {
       const text = detectorInputText.value.trim();
@@ -1275,6 +1591,8 @@ document.addEventListener('DOMContentLoaded', () => {
       btnScanAI.disabled = true;
       const origText = btnScanAI.querySelector('span').innerText;
       btnScanAI.querySelector('span').innerText = 'Scanning...';
+      if (detectorResults) detectorResults.style.display = 'none';
+      if (detectorProgressArea) detectorProgressArea.style.display = 'block';
 
       try {
         const res = await fetch('/api/detect', {
@@ -1284,37 +1602,102 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (!res.ok) throw new Error('Analysis failed.');
-        const data = await res.json();
-
-        document.getElementById('detHumanScore').innerText = `${data.human_score}%`;
-        document.getElementById('detHumanScore').className = `telemetry-value ${data.human_score > 75 ? 'val-green' : data.human_score > 45 ? 'val-amber' : 'val-rose'}`;
-        
-        document.getElementById('detAIScore').innerText = `${(data.ai_score * 100).toFixed(0)}%`;
-        document.getElementById('detBurstiness').innerText = `${data.burstiness}`;
-        document.getElementById('detReadingEase').innerText = `${data.reading_ease}/100`;
-
-        // Render sentence list
-        const list = document.getElementById('detSentenceList');
-        list.innerHTML = '';
-        (data.sentence_breakdown || []).forEach(s => {
-          const d = document.createElement('div');
-          d.className = `sentence-item risk-${s.risk}`;
-          d.innerHTML = `
-            <span>${s.text}</span>
-            <span style="font-family: var(--font-mono); font-size: 11px; white-space: nowrap; color: var(--text-tertiary);">
-              ${s.word_count}w • ${s.risk.toUpperCase()} RISK
-            </span>
-          `;
-          list.appendChild(d);
-        });
-
-        detectorResults.style.display = 'block';
+        const report = await res.json();
+        renderAuditReport(report, 'Pasted Text Passage', text);
+        showToast('Text Audit Complete!', 'success');
 
       } catch (err) {
         showToast(`Error: ${err.message}`, 'error');
       } finally {
         btnScanAI.disabled = false;
         btnScanAI.querySelector('span').innerText = origText;
+        if (detectorProgressArea) detectorProgressArea.style.display = 'none';
+      }
+    });
+  }
+
+  // Copy & Download Audit Report
+  const buildReportText = () => {
+    if (!latestAuditData) return '';
+    const { report, title, text } = latestAuditData;
+    const humanPct = report.human_score || 0;
+    const aiPct = (report.ai_score * 100).toFixed(1);
+    const dateStr = new Date().toLocaleString();
+
+    let out = `=================================================================\n`;
+    out += `AI & HUMAN CONTENT AUDIT REPORT\n`;
+    out += `Generated by AI Humanizer Studio on ${dateStr}\n`;
+    out += `=================================================================\n\n`;
+    out += `Document / Title : ${title}\n`;
+    out += `Overall Verdict  : ${humanPct >= 80 ? 'HUMAN-WRITTEN (PASSED)' : humanPct >= 45 ? 'MIXED / PARTIAL AI' : 'HIGH AI DETECTED'}\n`;
+    out += `Human Score      : ${humanPct}%\n`;
+    out += `AI Probability   : ${aiPct}%\n`;
+    out += `Total Words      : ${report.word_count || 0}\n`;
+    out += `Total Sentences  : ${report.sentence_count || 0}\n`;
+    out += `Burstiness Index : ${report.burstiness || 0} (Variance of sentence lengths)\n`;
+    out += `Reading Ease     : ${report.reading_ease || 0} / 100\n`;
+    out += `AI Clichés Found : ${(report.cliches || []).join(', ') || 'None'}\n\n`;
+    out += `-----------------------------------------------------------------\n`;
+    out += `SENTENCE-BY-SENTENCE RISK BREAKDOWN:\n`;
+    out += `-----------------------------------------------------------------\n`;
+    (report.sentence_breakdown || []).forEach((s, idx) => {
+      out += `[${idx + 1}] [${s.risk.toUpperCase()} RISK - ${s.word_count} words]\n`;
+      out += `    ${s.text}\n`;
+      if (s.cliches && s.cliches.length > 0) {
+        out += `    Trigger phrases: ${s.cliches.join(', ')}\n`;
+      }
+      out += `\n`;
+    });
+    out += `=================================================================\n`;
+    return out;
+  };
+
+  if (btnCopyDetectorReport) {
+    btnCopyDetectorReport.addEventListener('click', async () => {
+      const rep = buildReportText();
+      if (!rep) return;
+      try {
+        await navigator.clipboard.writeText(rep);
+        showToast('Audit report copied to clipboard!', 'success');
+      } catch (_) {
+        showToast('Failed to copy report.', 'error');
+      }
+    });
+  }
+
+  if (btnDownloadDetectorReport) {
+    btnDownloadDetectorReport.addEventListener('click', () => {
+      const rep = buildReportText();
+      if (!rep) return;
+      const blob = new Blob([rep], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `audit_report_${(latestAuditData.title || 'document').replace(/[^a-zA-Z0-9_-]/g, '_')}.txt`;
+      a.click();
+      showToast('Audit report downloaded!', 'success');
+    });
+  }
+
+  // Send to Humanizer Studio
+  if (btnSendToHumanizer) {
+    btnSendToHumanizer.addEventListener('click', () => {
+      if (!latestAuditData) return;
+      const { title, text } = latestAuditData;
+      if (detectorSelectedFile && typeof setSingleFile === 'function') {
+        const singleTabBtn = document.getElementById('tabBtnSingle');
+        if (singleTabBtn) singleTabBtn.click();
+        setSingleFile(detectorSelectedFile);
+        showToast(`Document "${title}" loaded into Single Document Humanizer!`, 'info');
+      } else {
+        const editorTabBtn = document.getElementById('tabBtnEditor');
+        if (editorTabBtn) editorTabBtn.click();
+        if (inputOriginalText) {
+          inputOriginalText.value = text;
+          updateTextStats(inputOriginalText, originalStats);
+          inputViewMode = 'highlight';
+          updateHighlightDisplays();
+        }
+        showToast('Text loaded into Humanizer Workspace!', 'info');
       }
     });
   }
