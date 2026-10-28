@@ -1329,6 +1329,65 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Client-side DOCX Text Extraction (Zero payload, bypasses cloud limits)
+  const extractTextFromDocx = async (file) => {
+    if (typeof JSZip === 'undefined') {
+      throw new Error('JSZip library not available');
+    }
+    const zip = await JSZip.loadAsync(file);
+    const docFile = zip.file('word/document.xml');
+    if (!docFile) {
+      throw new Error('Invalid DOCX format: word/document.xml not found');
+    }
+    const xmlStr = await docFile.async('string');
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlStr, 'application/xml');
+
+    let pList = xmlDoc.getElementsByTagName('w:p');
+    if (!pList || pList.length === 0) {
+      pList = xmlDoc.getElementsByTagNameNS('*', 'p');
+    }
+
+    const paragraphs = [];
+    if (pList && pList.length > 0) {
+      for (let i = 0; i < pList.length; i++) {
+        const p = pList[i];
+        let tList = p.getElementsByTagName('w:t');
+        if (!tList || tList.length === 0) {
+          tList = p.getElementsByTagNameNS('*', 't');
+        }
+        let pText = '';
+        for (let j = 0; j < tList.length; j++) {
+          pText += tList[j].textContent || '';
+        }
+        const clean = pText.trim();
+        if (clean) paragraphs.push(clean);
+      }
+    }
+
+    // Fallback if XML DOM tags were stripped or namespace mismatch
+    if (paragraphs.length === 0) {
+      const pMatches = xmlStr.match(/<w:p[\s>].*?<\/w:p>/gs) || [];
+      for (const pXml of pMatches) {
+        const tMatches = pXml.match(/<w:t[^>]*>(.*?)<\/w:t>/gs) || [];
+        const pText = tMatches.map(t => t.replace(/<[^>]+>/g, '')).join('');
+        if (pText.trim()) paragraphs.push(pText.trim());
+      }
+    }
+
+    return paragraphs.join('\n\n');
+  };
+
+  const extractTextFromFile = async (file) => {
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (ext === 'docx') {
+      return await extractTextFromDocx(file);
+    } else if (ext === 'txt' || ext === 'md') {
+      return await file.text();
+    }
+    return null;
+  };
+
   // File Selection in Detector
   const setDetectorFile = (file) => {
     detectorSelectedFile = file;
@@ -1337,9 +1396,52 @@ document.addEventListener('DOMContentLoaded', () => {
     if (detectorSelectedName) detectorSelectedName.innerText = file.name;
     const sizeKB = (file.size / 1024).toFixed(1);
     const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+
+    // Clear any previous warning
+    const oldWarn = document.getElementById('detectorSizeWarningBox');
+    if (oldWarn) oldWarn.remove();
+
+    const isDocx = file.name.toLowerCase().endsWith('.docx');
+    const isPdf = file.name.toLowerCase().endsWith('.pdf');
+    const isTooLarge = file.size > 4.5 * 1024 * 1024;
+
     if (detectorSelectedSize) {
-      detectorSelectedSize.innerText = file.size > 1024 * 1024 ? `${sizeMB} MB` : `${sizeKB} KB`;
+      if (isTooLarge && isDocx) {
+        detectorSelectedSize.innerHTML = `<span style="color: #34d399; font-weight: 600;">${sizeMB} MB (⚡ Local Text Extract — No Limit)</span>`;
+      } else if (isTooLarge && isPdf) {
+        detectorSelectedSize.innerHTML = `<span style="color: var(--color-danger); font-weight: 700;">${sizeMB} MB (Exceeds 4.5 MB Cloud Limit)</span>`;
+      } else {
+        detectorSelectedSize.innerText = file.size > 1024 * 1024 ? `${sizeMB} MB` : `${sizeKB} KB`;
+      }
     }
+
+    if (isTooLarge && isPdf) {
+      const warnBox = document.createElement('div');
+      warnBox.id = 'detectorSizeWarningBox';
+      warnBox.style.cssText = 'margin-top: 14px; padding: 12px 16px; border-radius: var(--radius-md); background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); color: #fca5a5; font-size: 0.85rem; line-height: 1.5;';
+      warnBox.innerHTML = `
+        <div style="font-weight: 700; color: #f87171; display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+          <span>⚠️</span>
+          <span>PDF ගොනුව විශාල වැඩියි (${sizeMB} MB) — Cloud සීමාව 4.5 MB වේ.</span>
+        </div>
+        <div style="color: var(--text-secondary); margin-bottom: 8px;">
+          විශාල PDF පරිලෝකනය කිරීමට පහත 'Raw Text' ටැබ් එකට text එක paste කරන්න හෝ .docx ගොනුවක් ලෙස upload කරන්න.
+        </div>
+        <button type="button" class="btn-secondary" id="btnSwitchToDetectorTextFromWarn" style="padding: 4px 10px; font-size: 12px; background: rgba(99, 102, 241, 0.2); border-color: #6366f1; color: #fff;">
+          <span>Raw Text Scan එකට මාරු වන්න →</span>
+        </button>
+      `;
+      if (detectorFileSelectedArea) {
+        detectorFileSelectedArea.appendChild(warnBox);
+        const btnSwitch = document.getElementById('btnSwitchToDetectorTextFromWarn');
+        if (btnSwitch) {
+          btnSwitch.addEventListener('click', () => {
+            if (btnDetectorModeText) btnDetectorModeText.click();
+          });
+        }
+      }
+    }
+
     if (detectorFileSelectedArea) detectorFileSelectedArea.style.display = 'block';
     if (detectorResults) detectorResults.style.display = 'none';
   };
@@ -1369,6 +1471,8 @@ document.addEventListener('DOMContentLoaded', () => {
     btnCancelDetectorFile.addEventListener('click', () => {
       detectorSelectedFile = null;
       if (detectorFileInput) detectorFileInput.value = '';
+      const oldWarn = document.getElementById('detectorSizeWarningBox');
+      if (oldWarn) oldWarn.remove();
       if (detectorFileSelectedArea) detectorFileSelectedArea.style.display = 'none';
     });
   }
@@ -1540,7 +1644,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (detectorResults) detectorResults.style.display = 'block';
   };
 
-  // Scan Document File Upload
+  // Scan Document File Upload (Resilient Local & Server Scan)
   if (btnScanDocument) {
     btnScanDocument.addEventListener('click', async () => {
       if (!detectorSelectedFile) {
@@ -1548,22 +1652,90 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      const file = detectorSelectedFile;
+      const ext = file.name.split('.').pop().toLowerCase();
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+
+      // Check for large PDF exceeding Vercel limits
+      if (ext === 'pdf' && file.size > 4.5 * 1024 * 1024) {
+        showToast(`PDF ගොනුව විශාල වැඩියි (${sizeMB} MB). Cloud සීමාව 4.5 MB වේ. කරුණාකර 'Raw Text' ටැබ් එකට text paste කරන්න.`, 'error');
+        return;
+      }
+
       btnScanDocument.disabled = true;
       if (detectorResults) detectorResults.style.display = 'none';
       if (detectorProgressArea) detectorProgressArea.style.display = 'block';
-
-      const formData = new FormData();
-      formData.append('file', detectorSelectedFile);
+      const progressStatus = document.getElementById('detectorProgressStatus');
+      if (progressStatus) progressStatus.innerText = 'Extracting document text and evaluating linguistic markers...';
 
       try {
+        let extractedText = null;
+
+        // Try direct browser extraction for DOCX, TXT, MD
+        // Bypasses 4.5 MB request payload limits, zero upload delay, 100% resilient
+        if (ext === 'docx' || ext === 'txt' || ext === 'md') {
+          try {
+            if (progressStatus) progressStatus.innerText = 'Parsing document contents locally...';
+            extractedText = await extractTextFromFile(file);
+          } catch (localErr) {
+            console.warn('Local document text extraction encountered an issue, trying server upload:', localErr);
+          }
+        }
+
+        // If client-side text was successfully extracted, analyze directly via /api/detect
+        if (extractedText && extractedText.trim().length > 0) {
+          if (progressStatus) progressStatus.innerText = 'Evaluating AI vs Human metrics, burstiness & perplexity...';
+          const res = await fetch('/api/detect', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: extractedText })
+          });
+
+          if (!res.ok) {
+            let errMsg = 'Document audit failed.';
+            try {
+              const err = await res.json();
+              errMsg = err.detail || errMsg;
+            } catch (_) {
+              errMsg = `Server error (${res.status})`;
+            }
+            throw new Error(errMsg);
+          }
+
+          const report = await res.json();
+          renderAuditReport(report, file.name, extractedText);
+          showToast('Document Audit Complete!', 'success');
+          return;
+        }
+
+        // Otherwise (or for PDF / fallback): send to server /api/scan-document
+        if (progressStatus) progressStatus.innerText = 'Uploading and scanning document...';
+        let fileToSend = file;
+        if (ext === 'docx' && typeof optimizeDocxIfNeeded === 'function') {
+          fileToSend = await optimizeDocxIfNeeded(file);
+        }
+
+        const formData = new FormData();
+        formData.append('file', fileToSend);
+
         const res = await fetch('/api/scan-document', {
           method: 'POST',
           body: formData
         });
 
         if (!res.ok) {
-          const err = await res.json().catch(() => ({ detail: 'Failed to scan document.' }));
-          throw new Error(err.detail || 'Document audit failed.');
+          let errMsg = 'Failed to scan document.';
+          if (res.status === 413) {
+            errMsg = `File is too large (${sizeMB} MB). Vercel cloud limit is 4.5 MB. Please copy-paste text into the Raw Text tab.`;
+          } else {
+            try {
+              const err = await res.json();
+              errMsg = err.detail || errMsg;
+            } catch (_) {
+              errMsg = `Server error (${res.status}: ${res.statusText || 'Gateway timeout or upload error'})`;
+            }
+          }
+          throw new Error(errMsg);
         }
 
         const data = await res.json();

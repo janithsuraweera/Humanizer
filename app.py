@@ -236,7 +236,11 @@ async def api_scan_document(
         if ext in [".docx", ".doc"]:
             in_stream = io.BytesIO(content)
             doc = docx.Document(in_stream)
-            paras = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
+            paras = []
+            for p in doc.paragraphs:
+                pt = p.text.strip()
+                if pt:
+                    paras.append(pt)
             for table in doc.tables:
                 for row in table.rows:
                     for cell in row.cells:
@@ -248,7 +252,19 @@ async def api_scan_document(
         elif ext == ".pdf":
             in_stream = io.BytesIO(content)
             reader = pypdf.PdfReader(in_stream)
-            pages = [p.extract_text().strip() for p in reader.pages if p.extract_text() and p.extract_text().strip()]
+            if reader.is_encrypted:
+                try:
+                    reader.decrypt("")
+                except Exception:
+                    pass
+            pages = []
+            for p in reader.pages:
+                try:
+                    t = p.extract_text()
+                    if t and t.strip():
+                        pages.append(t.strip())
+                except Exception:
+                    continue
             extracted_text = "\n\n".join(pages)
 
         elif ext in [".txt", ".md"]:
@@ -258,12 +274,12 @@ async def api_scan_document(
             raise HTTPException(status_code=400, detail=f"Unsupported format: {ext}. Supported: .docx, .pdf, .txt, .md")
 
         if not extracted_text:
-            raise HTTPException(status_code=400, detail="No readable text found in document.")
+            raise HTTPException(status_code=400, detail="No readable text found in document. If this is an image-only scanned PDF, please paste the text or upload an OCR-readable document.")
 
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to extract document text: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Could not extract text from document: {str(e)}")
 
     # Analyze with ai_detector
     report = ai_detector.analyze_text(extracted_text)
