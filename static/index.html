@@ -522,23 +522,65 @@
           <button class="preset-chip" data-target="editor" data-mode="fluent_human" data-intensity="75">Natural Flow</button>
         </div>
 
+        <!-- Plagiarism & AI Marker Highlight Control Bar -->
+        <div class="highlight-controls-bar">
+          <div class="highlight-toggle-wrap">
+            <span class="highlight-toggle-label">Plagiarism & AI Risk Scanner:</span>
+            <label class="switch-control" title="Toggle AI Plagiarism Markers Highlighting">
+              <input type="checkbox" id="chkAIHighlight" checked>
+              <span class="switch-slider"></span>
+            </label>
+            <span class="switch-status-pill" id="highlightPill">ON</span>
+          </div>
+
+          <!-- Color Legend Chips -->
+          <div class="highlight-legend" id="highlightLegend">
+            <div class="legend-chip legend-red" title="Words heavily flagged by Turnitin & GPTZero">
+              <span class="legend-dot red"></span>
+              <span>High Risk (Plagiarism/AI Flag)</span>
+            </div>
+            <div class="legend-chip legend-yellow" title="Common transitional AI patterns">
+              <span class="legend-dot yellow"></span>
+              <span>Medium Risk (Predictable AI)</span>
+            </div>
+            <div class="legend-chip legend-green" title="Human sentence variance and verified cadence">
+              <span class="legend-dot green"></span>
+              <span>Low Risk (Verified Human Flow)</span>
+            </div>
+          </div>
+        </div>
+
         <div class="editor-workspace">
           <!-- Left: Input Pane -->
           <div class="editor-pane">
             <div class="editor-pane-header">
               <span class="editor-pane-title">Original Passage</span>
+              <div class="pane-view-toggle">
+                <button type="button" class="view-chip active" id="btnInputViewHighlight">🔍 Highlights</button>
+                <button type="button" class="view-chip" id="btnInputViewRaw">✏️ Edit Text</button>
+              </div>
               <span class="editor-pane-counter" id="originalStats">0 words • 0 chars</span>
             </div>
-            <textarea class="editor-area" id="inputOriginalText" placeholder="Paste draft or synthesized text here..."></textarea>
+            <div class="editor-pane-body">
+              <textarea class="editor-area" id="inputOriginalText" placeholder="Paste draft or synthesized text here..."></textarea>
+              <div class="editor-area-highlight" id="inputHighlightDisplay" title="Click to edit raw text"></div>
+            </div>
           </div>
 
           <!-- Right: Output Pane -->
           <div class="editor-pane">
             <div class="editor-pane-header">
               <span class="editor-pane-title" style="color: var(--color-success);">Humanized Output</span>
+              <div class="pane-view-toggle">
+                <button type="button" class="view-chip active" id="btnOutputViewHighlight">🔍 Highlights</button>
+                <button type="button" class="view-chip" id="btnOutputViewRaw">📋 Raw Text</button>
+              </div>
               <span class="editor-pane-counter" id="humanizedStats">0 words • 0 chars</span>
             </div>
-            <textarea class="editor-area" id="outputHumanizedText" placeholder="Paraphrased passage will appear here..." readonly></textarea>
+            <div class="editor-pane-body">
+              <textarea class="editor-area" id="outputHumanizedText" placeholder="Paraphrased passage will appear here..." readonly></textarea>
+              <div class="editor-area-highlight" id="outputHighlightDisplay"></div>
+            </div>
           </div>
         </div>
 

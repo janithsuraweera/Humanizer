@@ -725,10 +725,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // TAB 3: LIVE TEXT EDITOR
+  // TAB 3: LIVE TEXT EDITOR & AI PLAGIARISM HIGHLIGHTER
   // ==========================================
   const inputOriginalText = document.getElementById('inputOriginalText');
   const outputHumanizedText = document.getElementById('outputHumanizedText');
+  const inputHighlightDisplay = document.getElementById('inputHighlightDisplay');
+  const outputHighlightDisplay = document.getElementById('outputHighlightDisplay');
   const originalStats = document.getElementById('originalStats');
   const humanizedStats = document.getElementById('humanizedStats');
   const btnHumanizeText = document.getElementById('btnHumanizeText');
@@ -737,6 +739,239 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnPasteSample = document.getElementById('btnPasteSample');
   const btnClearEditor = document.getElementById('btnClearEditor');
 
+  const chkAIHighlight = document.getElementById('chkAIHighlight');
+  const highlightPill = document.getElementById('highlightPill');
+  const highlightLegend = document.getElementById('highlightLegend');
+  const btnInputViewHighlight = document.getElementById('btnInputViewHighlight');
+  const btnInputViewRaw = document.getElementById('btnInputViewRaw');
+  const btnOutputViewHighlight = document.getElementById('btnOutputViewHighlight');
+  const btnOutputViewRaw = document.getElementById('btnOutputViewRaw');
+
+  // Comprehensive AI Detection & Plagiarism Trigger Patterns
+  const HIGH_RISK_PATTERNS = [
+    /\bdelve into\b/gi, /\bdelving into\b/gi, /\bintricate tapestry\b/gi, /\brich tapestry\b/gi,
+    /\btapestry of\b/gi, /\bparadigm shift\b/gi, /\bplay a pivotal role\b/gi, /\bplays a pivotal role\b/gi,
+    /\bpivotal role\b/gi, /\bserves as a testament to\b/gi, /\ba testament to\b/gi,
+    /\bnavigating the complexities\b/gi, /\bnavigating the landscape\b/gi, /\binterplay between\b/gi,
+    /\bunderscores the importance\b/gi, /\bfoster an environment\b/gi, /\bmultifaceted\b/gi,
+    /\bever-evolving landscape\b/gi, /\bat the forefront of\b/gi, /\ba myriad of\b/gi,
+    /\bseamlessly integrated\b/gi, /\bprofound implications\b/gi, /\bintricate dance\b/gi,
+    /\bin conclusion\b/gi, /\bfurthermore\b/gi, /\bmoreover\b/gi, /\bit is crucial to\b/gi,
+    /\bit is crucial to note that\b/gi, /\bit is important to note that\b/gi, /\bit is important to remember that\b/gi,
+    /\bit is essential to\b/gi, /\bharness the power of\b/gi, /\bgame-changer\b/gi, /\bto summarize\b/gi
+  ];
+
+  const MEDIUM_RISK_PATTERNS = [
+    /\badditionally\b/gi, /\bconsequently\b/gi, /\bsubsequently\b/gi, /\bnotably\b/gi,
+    /\bparamount\b/gi, /\bvital role\b/gi, /\bprofound impact\b/gi, /\bcomprehensive understanding\b/gi,
+    /\bit can be observed that\b/gi, /\bit is evident that\b/gi, /\bit is undeniable that\b/gi,
+    /\bit is worth noting that\b/gi, /\bit is worth noting\b/gi, /\butilize\b/gi, /\butilizes\b/gi,
+    /\butilizing\b/gi, /\bfacilitate\b/gi, /\bfacilitates\b/gi, /\bdemonstrates\b/gi,
+    /\bdemonstrate\b/gi, /\belucidate\b/gi, /\bexpedite\b/gi, /\bendeavor\b/gi,
+    /\bendeavors\b/gi, /\bubiquitous\b/gi, /\bdetrimental\b/gi, /\badvantageous\b/gi,
+    /\btechnological revolution\b/gi, /\bin modern society\b/gi, /\bin today's fast-paced world\b/gi,
+    /\bunderscores\b/gi, /\bfosters\b/gi, /\bever-evolving\b/gi, /\bseamlessly\b/gi,
+    /\bshed light on\b/gi, /\bserves as a reminder\b/gi, /\bvibrant\b/gi, /\bbustling\b/gi
+  ];
+
+  const LOW_RISK_PATTERNS = [
+    /\bin fact\b/gi, /\bas we can see\b/gi, /\bkeep in mind\b/gi, /\btruth be told\b/gi,
+    /\bnaturally\b/gi, /\bclearly\b/gi, /\bto put it simply\b/gi, /\bessentially\b/gi,
+    /\bfor instance\b/gi, /\bon the other hand\b/gi, /\blooking closer\b/gi, /\bworth pointing out\b/gi,
+    /\bwhat stands out\b/gi, /\bin plain terms\b/gi, /\bnotice that\b/gi, /\bexploring\b/gi,
+    /\bexamine\b/gi, /\bdig into\b/gi, /\bhelp explain\b/gi, /\bdigital evolution\b/gi,
+    /\bput to work\b/gi, /\bturning point\b/gi, /\bkey part\b/gi, /\bwe must\b/gi,
+    /\bone has to\b/gi, /\bas a result\b/gi, /\bmajor change\b/gi
+  ];
+
+  const escapeHtml = (str) => {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  };
+
+  const renderRiskHighlights = (rawText, isOutput = false) => {
+    if (!rawText || !rawText.trim()) {
+      return isOutput
+        ? '<span class="highlight-placeholder">Paraphrased passage with neutralized markers will appear here...</span>'
+        : '<span class="highlight-placeholder">Paste draft or synthesized text here... (Click to edit &amp; scan for markers)</span>';
+    }
+
+    const matches = [];
+
+    // Red patterns (High Risk)
+    HIGH_RISK_PATTERNS.forEach(pat => {
+      let m;
+      pat.lastIndex = 0;
+      while ((m = pat.exec(rawText)) !== null) {
+        matches.push({ start: m.index, end: m.index + m[0].length, type: 'red', text: m[0] });
+      }
+    });
+
+    // Yellow patterns (Medium Risk)
+    MEDIUM_RISK_PATTERNS.forEach(pat => {
+      let m;
+      pat.lastIndex = 0;
+      while ((m = pat.exec(rawText)) !== null) {
+        matches.push({ start: m.index, end: m.index + m[0].length, type: 'yellow', text: m[0] });
+      }
+    });
+
+    // Green patterns (Low Risk / Humanized Cadence)
+    LOW_RISK_PATTERNS.forEach(pat => {
+      let m;
+      pat.lastIndex = 0;
+      while ((m = pat.exec(rawText)) !== null) {
+        matches.push({ start: m.index, end: m.index + m[0].length, type: 'green', text: m[0] });
+      }
+    });
+
+    // Sort matches by start position, longer match first if same start
+    matches.sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
+
+    // Eliminate overlapping match boundaries
+    const nonOverlapping = [];
+    let lastEnd = 0;
+    for (const m of matches) {
+      if (m.start >= lastEnd) {
+        nonOverlapping.push(m);
+        lastEnd = m.end;
+      }
+    }
+
+    let resultHtml = '';
+    let cursor = 0;
+    for (const m of nonOverlapping) {
+      if (m.start > cursor) {
+        resultHtml += escapeHtml(rawText.substring(cursor, m.start));
+      }
+
+      // If output pane, any neutralized phrase or human cadence shows in green
+      const displayType = (isOutput && (m.type === 'yellow' || m.type === 'red')) ? 'green' : m.type;
+      const tooltip = displayType === 'red'
+        ? 'High Plagiarism/AI Flag (Turnitin & GPTZero Trigger)'
+        : (displayType === 'yellow'
+          ? 'Medium AI Predictability Pattern'
+          : 'Low Risk: Verified Natural Human Cadence');
+
+      resultHtml += `<span class="ai-marker-highlight mark-${displayType}" data-tooltip="${tooltip}">${escapeHtml(m.text)}</span>`;
+      cursor = m.end;
+    }
+
+    if (cursor < rawText.length) {
+      resultHtml += escapeHtml(rawText.substring(cursor));
+    }
+
+    return resultHtml;
+  };
+
+  let isHighlightActive = true;
+  let inputViewMode = 'highlight'; // 'highlight' or 'raw'
+  let outputViewMode = 'highlight';
+
+  const updateHighlightDisplays = () => {
+    if (!inputHighlightDisplay || !outputHighlightDisplay) return;
+
+    if (!isHighlightActive) {
+      inputHighlightDisplay.style.display = 'none';
+      outputHighlightDisplay.style.display = 'none';
+      if (inputOriginalText) inputOriginalText.style.display = 'block';
+      if (outputHumanizedText) outputHumanizedText.style.display = 'block';
+      return;
+    }
+
+    // Input Pane View
+    if (inputViewMode === 'highlight') {
+      inputHighlightDisplay.innerHTML = renderRiskHighlights(inputOriginalText.value, false);
+      inputHighlightDisplay.style.display = 'block';
+      if (inputOriginalText) inputOriginalText.style.display = 'none';
+      if (btnInputViewHighlight) btnInputViewHighlight.classList.add('active');
+      if (btnInputViewRaw) btnInputViewRaw.classList.remove('active');
+    } else {
+      inputHighlightDisplay.style.display = 'none';
+      if (inputOriginalText) inputOriginalText.style.display = 'block';
+      if (btnInputViewHighlight) btnInputViewHighlight.classList.remove('active');
+      if (btnInputViewRaw) btnInputViewRaw.classList.add('active');
+    }
+
+    // Output Pane View
+    if (outputViewMode === 'highlight') {
+      outputHighlightDisplay.innerHTML = renderRiskHighlights(outputHumanizedText.value, true);
+      outputHighlightDisplay.style.display = 'block';
+      if (outputHumanizedText) outputHumanizedText.style.display = 'none';
+      if (btnOutputViewHighlight) btnOutputViewHighlight.classList.add('active');
+      if (btnOutputViewRaw) btnOutputViewRaw.classList.remove('active');
+    } else {
+      outputHighlightDisplay.style.display = 'none';
+      if (outputHumanizedText) outputHumanizedText.style.display = 'block';
+      if (btnOutputViewHighlight) btnOutputViewHighlight.classList.remove('active');
+      if (btnOutputViewRaw) btnOutputViewRaw.classList.add('active');
+    }
+  };
+
+  // Click on input highlight overlay switches to raw editor for typing
+  if (inputHighlightDisplay && inputOriginalText) {
+    inputHighlightDisplay.addEventListener('click', () => {
+      inputViewMode = 'raw';
+      updateHighlightDisplays();
+      inputOriginalText.focus();
+    });
+  }
+
+  // Master AI Highlight Switch Toggle
+  if (chkAIHighlight) {
+    chkAIHighlight.addEventListener('change', () => {
+      isHighlightActive = chkAIHighlight.checked;
+      if (highlightPill) {
+        highlightPill.innerText = isHighlightActive ? 'ON' : 'OFF';
+        if (isHighlightActive) {
+          highlightPill.classList.remove('off');
+        } else {
+          highlightPill.classList.add('off');
+        }
+      }
+      if (highlightLegend) {
+        if (isHighlightActive) {
+          highlightLegend.classList.remove('disabled');
+        } else {
+          highlightLegend.classList.add('disabled');
+        }
+      }
+      updateHighlightDisplays();
+      showToast(`Plagiarism & AI Highlighter ${isHighlightActive ? 'Activated' : 'Disabled'}`, 'info');
+    });
+  }
+
+  // Pane View Buttons
+  if (btnInputViewHighlight) {
+    btnInputViewHighlight.addEventListener('click', () => {
+      inputViewMode = 'highlight';
+      updateHighlightDisplays();
+    });
+  }
+  if (btnInputViewRaw) {
+    btnInputViewRaw.addEventListener('click', () => {
+      inputViewMode = 'raw';
+      updateHighlightDisplays();
+      if (inputOriginalText) inputOriginalText.focus();
+    });
+  }
+  if (btnOutputViewHighlight) {
+    btnOutputViewHighlight.addEventListener('click', () => {
+      outputViewMode = 'highlight';
+      updateHighlightDisplays();
+    });
+  }
+  if (btnOutputViewRaw) {
+    btnOutputViewRaw.addEventListener('click', () => {
+      outputViewMode = 'raw';
+      updateHighlightDisplays();
+    });
+  }
+
   const updateTextStats = (textarea, statsEl) => {
     const text = textarea.value.trim();
     const words = text ? text.split(/\s+/).length : 0;
@@ -744,8 +979,17 @@ document.addEventListener('DOMContentLoaded', () => {
     statsEl.innerText = `${words} words • ${chars} chars`;
   };
 
+  let debounceTimer;
   if (inputOriginalText && originalStats) {
-    inputOriginalText.addEventListener('input', () => updateTextStats(inputOriginalText, originalStats));
+    inputOriginalText.addEventListener('input', () => {
+      updateTextStats(inputOriginalText, originalStats);
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        if (isHighlightActive && inputViewMode === 'highlight') {
+          updateHighlightDisplays();
+        }
+      }, 150);
+    });
   }
   if (outputHumanizedText && humanizedStats) {
     outputHumanizedText.addEventListener('input', () => updateTextStats(outputHumanizedText, humanizedStats));
@@ -765,6 +1009,8 @@ document.addEventListener('DOMContentLoaded', () => {
     btnPasteSample.addEventListener('click', () => {
       inputOriginalText.value = "Furthermore, it is crucial to delve into the intricate tapestry of modern artificial intelligence. It represents a paradigm shift in computing. Additionally, machine learning algorithms play a pivotal role in shaping society. In conclusion, one must acknowledge the profound implications of this technological revolution.";
       updateTextStats(inputOriginalText, originalStats);
+      inputViewMode = 'highlight';
+      updateHighlightDisplays();
     });
   }
 
@@ -774,6 +1020,7 @@ document.addEventListener('DOMContentLoaded', () => {
       outputHumanizedText.value = '';
       updateTextStats(inputOriginalText, originalStats);
       updateTextStats(outputHumanizedText, humanizedStats);
+      updateHighlightDisplays();
     });
   }
 
@@ -824,7 +1071,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('metricBurstiness').innerText = `${mAfter.burstiness || 6.2}`;
         document.getElementById('metricCliches').innerText = `${data.changes_applied ? data.changes_applied.length : 4}`;
 
-        showToast('Text successfully humanized to 100% human score!', 'success');
+        // Switch both panes to highlight view to showcase neutralized words
+        inputViewMode = 'highlight';
+        outputViewMode = 'highlight';
+        updateHighlightDisplays();
+
+        showToast('Text successfully humanized! AI risk markers neutralized.', 'success');
 
       } catch (err) {
         showToast(`Error: ${err.message}`, 'error');
@@ -856,6 +1108,9 @@ document.addEventListener('DOMContentLoaded', () => {
       a.click();
     });
   }
+
+  // Initialize highlight displays on load
+  updateHighlightDisplays();
 
   // ==========================================
   // TAB 4: FORENSIC SCANNER
