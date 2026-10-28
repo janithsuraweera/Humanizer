@@ -216,8 +216,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
+  const MAX_FILE_SIZE = 4.2 * 1024 * 1024; // 4.2 MB Vercel Serverless Body Limit
+
   const handleBatchFiles = (files) => {
     for (const f of files) {
+      if (f.size > MAX_FILE_SIZE) {
+        showToast(`Skipped "${f.name}" (${(f.size / (1024 * 1024)).toFixed(1)} MB): Exceeds Vercel 4.5 MB limit. Please remove embedded images.`, 'error');
+        continue;
+      }
       if (!batchFiles.some(existing => existing.name === f.name && existing.size === f.size)) {
         batchFiles.push(f);
       }
@@ -414,11 +420,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!res.ok) {
           let errMsg = 'Batch processing failed.';
-          try {
-            const err = await res.json();
-            errMsg = err.detail || errMsg;
-          } catch (_) {
-            errMsg = `Server error (${res.status}: ${res.statusText || 'Timeout or gateway error'})`;
+          if (res.status === 413) {
+            errMsg = 'Batch payload too large (413). Total size exceeds Vercel 4.5 MB limit. Please remove embedded images or upload files individually.';
+          } else {
+            try {
+              const err = await res.json();
+              errMsg = err.detail || errMsg;
+            } catch (_) {
+              errMsg = `Server error (${res.status}: ${res.statusText || 'Timeout or gateway error'})`;
+            }
           }
           throw new Error(errMsg);
         }
@@ -488,7 +498,52 @@ document.addEventListener('DOMContentLoaded', () => {
     const badge = singleFileSelectedArea.querySelector('.file-ext-badge');
     if (badge) badge.innerText = '.' + ext;
     singleSelectedName.innerText = file.name;
-    singleSelectedSize.innerText = `${(file.size / 1024).toFixed(1)} KB`;
+
+    const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+    const sizeKB = (file.size / 1024).toFixed(1);
+    const isTooLarge = file.size > MAX_FILE_SIZE;
+
+    // Remove any previous warning box
+    const oldWarn = document.getElementById('singleSizeWarningBox');
+    if (oldWarn) oldWarn.remove();
+
+    if (isTooLarge) {
+      singleSelectedSize.innerHTML = `<span style="color: var(--color-danger); font-weight: 700;">${sizeMB} MB (Exceeds 4.5 MB Cloud Limit)</span>`;
+      btnStartSingle.disabled = true;
+      
+      const warnBox = document.createElement('div');
+      warnBox.id = 'singleSizeWarningBox';
+      warnBox.style.cssText = 'margin-top: 14px; padding: 14px 18px; border-radius: var(--radius-md); background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); color: #fca5a5; font-size: 0.88rem; line-height: 1.6;';
+      warnBox.innerHTML = `
+        <div style="font-weight: 700; color: #f87171; display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+          <span style="font-size: 16px;">⚠️</span>
+          <span>ගොනුව විශාල වැඩියි (${sizeMB} MB) - Vercel Cloud සීමාව 4.5 MB වේ.</span>
+        </div>
+        <div style="color: var(--text-secondary); margin-bottom: 8px;">
+          Word (.docx) ලේඛන විශාල වීමට ප්‍රධාන හේතුව එහි ඇති high-resolution පින්තූර (images) වේ.
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <span style="color: #ffffff; font-weight: 600;">විසඳුම්:</span>
+          <span>1. Word document එකේ ඇති පින්තූර ඉවත් කර නැවත Save කරන්න.</span>
+          <span>හෝ</span>
+          <button type="button" class="btn-secondary" id="btnSwitchToEditorFromWarn" style="padding: 4px 10px; font-size: 12px; background: rgba(99, 102, 241, 0.2); border-color: #6366f1; color: #fff;">
+            <span>Live Text Editor එකට යන්න (Unlimited Words) →</span>
+          </button>
+        </div>
+      `;
+      singleFileSelectedArea.appendChild(warnBox);
+
+      const btnSwitch = document.getElementById('btnSwitchToEditorFromWarn');
+      if (btnSwitch) {
+        btnSwitch.addEventListener('click', () => switchTab('tab-editor'));
+      }
+
+      showToast(`File size (${sizeMB} MB) exceeds Vercel 4.5 MB limit. Please remove embedded images.`, 'error');
+    } else {
+      singleSelectedSize.innerText = file.size > 1024 * 1024 ? `${sizeMB} MB` : `${sizeKB} KB`;
+      btnStartSingle.disabled = false;
+    }
+
     singleFileSelectedArea.style.display = 'block';
     singleResultArea.style.display = 'none';
   };
@@ -556,11 +611,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!res.ok) {
           let errMsg = 'Document processing failed.';
-          try {
-            const err = await res.json();
-            errMsg = err.detail || errMsg;
-          } catch (_) {
-            errMsg = `Server error (${res.status}: ${res.statusText || 'Timeout or gateway error'})`;
+          if (res.status === 413) {
+            errMsg = 'File is too large (413). Vercel cloud limit is 4.5 MB. Please remove high-resolution images from the document or copy-paste text into the Live Text Editor.';
+          } else {
+            try {
+              const err = await res.json();
+              errMsg = err.detail || errMsg;
+            } catch (_) {
+              errMsg = `Server error (${res.status}: ${res.statusText || 'Timeout or gateway error'})`;
+            }
           }
           throw new Error(errMsg);
         }
