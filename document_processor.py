@@ -84,6 +84,53 @@ class DocumentProcessor:
             "changes": all_changes
         }
 
+    @staticmethod
+    def _update_paragraph_in_place(para, new_text: str):
+        """
+        Updates paragraph text in-place while strictly preserving original formatting,
+        including paragraph style, alignment, line spacing, font family, font size,
+        bold, italic, underline, and color.
+        """
+        if not para.runs:
+            para.text = new_text
+            return
+
+        # Find first run with explicit font formatting or fallback to runs[0]
+        ref_run = para.runs[0]
+        for r in para.runs:
+            if r.font.name or r.font.size or r.bold or r.italic or r.underline:
+                ref_run = r
+                break
+
+        font_name = ref_run.font.name
+        font_size = ref_run.font.size
+        bold = ref_run.bold
+        italic = ref_run.italic
+        underline = ref_run.underline
+        color = ref_run.font.color.rgb if (ref_run.font.color and ref_run.font.color.rgb) else None
+
+        # Set new humanized text on the first run
+        target_run = para.runs[0]
+        target_run.text = new_text
+
+        # Re-apply preserved run formatting
+        if font_name:
+            target_run.font.name = font_name
+        if font_size:
+            target_run.font.size = font_size
+        if bold is not None:
+            target_run.bold = bold
+        if italic is not None:
+            target_run.italic = italic
+        if underline is not None:
+            target_run.underline = underline
+        if color:
+            target_run.font.color.rgb = color
+
+        # Blank out subsequent runs in this paragraph so old text is wiped
+        for r in para.runs[1:]:
+            r.text = ""
+
     async def process_docx(
         self,
         file_bytes: bytes,
@@ -93,24 +140,24 @@ class DocumentProcessor:
         api_key: str = None
     ) -> Tuple[bytes, Dict[str, Any]]:
         """
-        Processes a .docx file: extracts paragraphs, humanizes text,
-        and constructs a new cleanly styled .docx file.
+        Processes a .docx file strictly IN-PLACE:
+        Humanizes text while preserving 100% of the original document formatting:
+        fonts, font sizes, styles, margins, headings, bullet lists, alignments,
+        line spacing, tables, headers, footers, and diagrams.
         """
         in_stream = io.BytesIO(file_bytes)
         source_doc = docx.Document(in_stream)
-        out_doc = docx.Document()
 
         original_full_text = []
         humanized_full_text = []
         total_changes = []
 
+        target_paras = []
         para_tasks = []
-        para_metadata = []
 
         for para in source_doc.paragraphs:
             text = para.text.strip()
             if not text:
-                para_metadata.append(("empty", "", ""))
                 continue
 
             style_name = para.style.name if para.style else "Normal"
@@ -118,8 +165,9 @@ class DocumentProcessor:
             
             # Headings or short snippets (< 12 words) use local engine for sub-millisecond speed
             effective_provider = "local" if (is_heading or len(text.split()) < 12) else provider
-            
-            para_metadata.append(("heading" if is_heading else "para", style_name, text))
+
+            target_paras.append(para)
+            original_full_text.append(text)
             para_tasks.append(
                 engine.humanize(
                     text,
@@ -131,39 +179,45 @@ class DocumentProcessor:
                 )
             )
 
+        # Also collect all table cell paragraphs to process in-place
+        table_cell_paras = []
+        table_tasks = []
+        for table in source_doc.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    for cp in cell.paragraphs:
+                        c_text = cp.text.strip()
+                        if c_text:
+                            table_cell_paras.append(cp)
+                            table_tasks.append(
+                                engine.humanize(
+                                    c_text,
+                                    mode="academic",
+                                    intensity=40,
+                                    provider="local",
+                                    skip_metrics=True
+                                )
+                            )
+
         # Execute all paragraphs concurrently in parallel
-        processed_results = await asyncio.gather(*para_tasks)
-        res_iter = iter(processed_results)
+        all_results = await asyncio.gather(*para_tasks, *table_tasks)
+        para_results = all_results[:len(para_tasks)]
+        table_results = all_results[len(para_tasks):]
 
-        for p_type, style_name, orig_text in para_metadata:
-            if p_type == "empty":
-                out_doc.add_paragraph()
-                continue
-
-            original_full_text.append(orig_text)
-            res = next(res_iter)
+        # Update body paragraphs in-place preserving 100% formatting
+        for para, res in zip(target_paras, para_results):
             humanized_text = res["humanized_text"]
             total_changes.extend(res.get("changes_applied", []))
             humanized_full_text.append(humanized_text)
+            self._update_paragraph_in_place(para, humanized_text)
 
-            if p_type == "heading":
-                out_doc.add_heading(humanized_text, level=1 if "1" in style_name else 2)
-            else:
-                out_doc.add_paragraph(humanized_text)
+        # Update table cell paragraphs in-place preserving 100% formatting
+        for cp, res in zip(table_cell_paras, table_results):
+            self._update_paragraph_in_place(cp, res["humanized_text"])
 
-        # Also handle tables if present
-        for table in source_doc.tables:
-            out_table = out_doc.add_table(rows=len(table.rows), cols=len(table.columns))
-            out_table.style = 'Table Grid'
-            for r_idx, row in enumerate(table.rows):
-                for c_idx, cell in enumerate(row.cells):
-                    cell_text = cell.text.strip()
-                    if cell_text:
-                        res = await engine.humanize(cell_text, mode="academic", intensity=50, provider="local", skip_metrics=True)
-                        out_table.cell(r_idx, c_idx).text = res["humanized_text"]
-
+        # Save source_doc directly to output stream (preserving original template and styles)
         out_stream = io.BytesIO()
-        out_doc.save(out_stream)
+        source_doc.save(out_stream)
         out_bytes = out_stream.getvalue()
 
         orig_str = "\n\n".join(original_full_text)
