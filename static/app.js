@@ -527,6 +527,129 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ==========================================================================
+  // SHARED AI DETECTION & PLAGIARISM RISK HIGHLIGHTER ENGINE
+  // ==========================================================================
+  const HIGH_RISK_PATTERNS = [
+    /\bdelve into\b/gi, /\bdelving into\b/gi, /\bintricate tapestry\b/gi, /\brich tapestry\b/gi,
+    /\btapestry of\b/gi, /\bparadigm shift\b/gi, /\bplay a pivotal role\b/gi, /\bplays a pivotal role\b/gi,
+    /\bpivotal role\b/gi, /\bserves as a testament to\b/gi, /\ba testament to\b/gi,
+    /\bnavigating the complexities\b/gi, /\bnavigating the landscape\b/gi, /\binterplay between\b/gi,
+    /\bunderscores the importance\b/gi, /\bfoster an environment\b/gi, /\bmultifaceted\b/gi,
+    /\bever-evolving landscape\b/gi, /\bat the forefront of\b/gi, /\ba myriad of\b/gi,
+    /\bseamlessly integrated\b/gi, /\bprofound implications\b/gi, /\bintricate dance\b/gi,
+    /\bin conclusion\b/gi, /\bfurthermore\b/gi, /\bmoreover\b/gi, /\bit is crucial to\b/gi,
+    /\bit is crucial to note that\b/gi, /\bit is important to note that\b/gi, /\bit is important to remember that\b/gi,
+    /\bit is essential to\b/gi, /\bharness the power of\b/gi, /\bgame-changer\b/gi, /\bto summarize\b/gi
+  ];
+
+  const MEDIUM_RISK_PATTERNS = [
+    /\badditionally\b/gi, /\bconsequently\b/gi, /\bsubsequently\b/gi, /\bnotably\b/gi,
+    /\bparamount\b/gi, /\bvital role\b/gi, /\bprofound impact\b/gi, /\bcomprehensive understanding\b/gi,
+    /\bit can be observed that\b/gi, /\bit is evident that\b/gi, /\bit is undeniable that\b/gi,
+    /\bit is worth noting that\b/gi, /\bit is worth noting\b/gi, /\butilize\b/gi, /\butilizes\b/gi,
+    /\butilizing\b/gi, /\bfacilitate\b/gi, /\bfacilitates\b/gi, /\bdemonstrates\b/gi,
+    /\bdemonstrate\b/gi, /\belucidate\b/gi, /\bexpedite\b/gi, /\bendeavor\b/gi,
+    /\bendeavors\b/gi, /\bubiquitous\b/gi, /\bdetrimental\b/gi, /\badvantageous\b/gi,
+    /\btechnological revolution\b/gi, /\bin modern society\b/gi, /\bin today's fast-paced world\b/gi,
+    /\bunderscores\b/gi, /\bfosters\b/gi, /\bever-evolving\b/gi, /\bseamlessly\b/gi,
+    /\bshed light on\b/gi, /\bserves as a reminder\b/gi, /\bvibrant\b/gi, /\bbustling\b/gi
+  ];
+
+  const LOW_RISK_PATTERNS = [
+    /\bin fact\b/gi, /\bas we can see\b/gi, /\bkeep in mind\b/gi, /\btruth be told\b/gi,
+    /\bnaturally\b/gi, /\bclearly\b/gi, /\bto put it simply\b/gi, /\bessentially\b/gi,
+    /\bfor instance\b/gi, /\bon the other hand\b/gi, /\blooking closer\b/gi, /\bworth pointing out\b/gi,
+    /\bwhat stands out\b/gi, /\bin plain terms\b/gi, /\bnotice that\b/gi, /\bexploring\b/gi,
+    /\bexamine\b/gi, /\bdig into\b/gi, /\bhelp explain\b/gi, /\bdigital evolution\b/gi,
+    /\bput to work\b/gi, /\bturning point\b/gi, /\bkey part\b/gi, /\bwe must\b/gi,
+    /\bone has to\b/gi, /\bas a result\b/gi, /\bmajor change\b/gi
+  ];
+
+  const escapeHtml = (str) => {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  };
+
+  const renderRiskHighlights = (rawText, isOutput = false) => {
+    if (!rawText || !rawText.trim()) {
+      return isOutput
+        ? '<span class="highlight-placeholder">Paraphrased passage with neutralized markers will appear here...</span>'
+        : '<span class="highlight-placeholder">Original document passage preview will appear here...</span>';
+    }
+
+    const matches = [];
+
+    // Red patterns (High Risk)
+    HIGH_RISK_PATTERNS.forEach(pat => {
+      let m;
+      pat.lastIndex = 0;
+      while ((m = pat.exec(rawText)) !== null) {
+        matches.push({ start: m.index, end: m.index + m[0].length, type: 'red', text: m[0] });
+      }
+    });
+
+    // Yellow patterns (Medium Risk)
+    MEDIUM_RISK_PATTERNS.forEach(pat => {
+      let m;
+      pat.lastIndex = 0;
+      while ((m = pat.exec(rawText)) !== null) {
+        matches.push({ start: m.index, end: m.index + m[0].length, type: 'yellow', text: m[0] });
+      }
+    });
+
+    // Green patterns (Low Risk / Humanized Cadence)
+    LOW_RISK_PATTERNS.forEach(pat => {
+      let m;
+      pat.lastIndex = 0;
+      while ((m = pat.exec(rawText)) !== null) {
+        matches.push({ start: m.index, end: m.index + m[0].length, type: 'green', text: m[0] });
+      }
+    });
+
+    // Sort matches by start position, longer match first if same start
+    matches.sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
+
+    // Eliminate overlapping match boundaries
+    const nonOverlapping = [];
+    let lastEnd = 0;
+    for (const m of matches) {
+      if (m.start >= lastEnd) {
+        nonOverlapping.push(m);
+        lastEnd = m.end;
+      }
+    }
+
+    let resultHtml = '';
+    let cursor = 0;
+    for (const m of nonOverlapping) {
+      if (m.start > cursor) {
+        resultHtml += escapeHtml(rawText.substring(cursor, m.start));
+      }
+
+      // If output pane, any neutralized phrase or human cadence shows in green
+      const displayType = (isOutput && (m.type === 'yellow' || m.type === 'red')) ? 'green' : m.type;
+      const tooltip = displayType === 'red'
+        ? 'High Plagiarism/AI Flag (Turnitin & GPTZero Trigger)'
+        : (displayType === 'yellow'
+          ? 'Medium AI Predictability Pattern'
+          : 'Low Risk: Verified Natural Human Cadence');
+
+      resultHtml += `<span class="ai-marker-highlight mark-${displayType}" data-tooltip="${tooltip}">${escapeHtml(m.text)}</span>`;
+      cursor = m.end;
+    }
+
+    if (cursor < rawText.length) {
+      resultHtml += escapeHtml(rawText.substring(cursor));
+    }
+
+    return resultHtml;
+  };
+
   // ==========================================
   // TAB 2: SINGLE DOCUMENT
   // ==========================================
@@ -543,6 +666,136 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnDownloadSingleDocx = document.getElementById('btnDownloadSingleDocx');
   const singleResultMeta = document.getElementById('singleResultMeta');
   const singleStatusText = document.getElementById('singleStatusText');
+
+  // Single Document Preview & Highlighter Elements
+  const chkSingleHighlight = document.getElementById('chkSingleHighlight');
+  const singleHighlightPill = document.getElementById('singleHighlightPill');
+  const singleHighlightLegend = document.getElementById('singleHighlightLegend');
+  const btnSingleOrigViewHighlight = document.getElementById('btnSingleOrigViewHighlight');
+  const btnSingleOrigViewRaw = document.getElementById('btnSingleOrigViewRaw');
+  const btnSingleHumanViewHighlight = document.getElementById('btnSingleHumanViewHighlight');
+  const btnSingleHumanViewRaw = document.getElementById('btnSingleHumanViewRaw');
+  const singleOrigText = document.getElementById('singleOrigText');
+  const singleOrigHighlightDisplay = document.getElementById('singleOrigHighlightDisplay');
+  const singleHumanText = document.getElementById('singleHumanText');
+  const singleHumanHighlightDisplay = document.getElementById('singleHumanHighlightDisplay');
+  const singleOrigStats = document.getElementById('singleOrigStats');
+  const singleHumanStats = document.getElementById('singleHumanStats');
+  const btnCopySinglePreview = document.getElementById('btnCopySinglePreview');
+
+  let isSingleHighlightActive = true;
+  let singleOrigViewMode = 'highlight'; // 'highlight' or 'raw'
+  let singleHumanViewMode = 'highlight';
+
+  const updateSingleStats = (text, el) => {
+    if (!el) return;
+    const t = (text || '').trim();
+    const words = t ? t.split(/\s+/).length : 0;
+    const chars = t.length;
+    el.innerText = `${words} words • ${chars} chars`;
+  };
+
+  const updateSingleHighlightDisplays = () => {
+    if (!singleOrigHighlightDisplay || !singleHumanHighlightDisplay) return;
+
+    if (!isSingleHighlightActive) {
+      singleOrigHighlightDisplay.style.display = 'none';
+      singleHumanHighlightDisplay.style.display = 'none';
+      if (singleOrigText) singleOrigText.style.display = 'block';
+      if (singleHumanText) singleHumanText.style.display = 'block';
+      return;
+    }
+
+    // Original Document Pane
+    if (singleOrigViewMode === 'highlight') {
+      singleOrigHighlightDisplay.innerHTML = renderRiskHighlights(singleOrigText.value, false);
+      singleOrigHighlightDisplay.style.display = 'block';
+      if (singleOrigText) singleOrigText.style.display = 'none';
+      if (btnSingleOrigViewHighlight) btnSingleOrigViewHighlight.classList.add('active');
+      if (btnSingleOrigViewRaw) btnSingleOrigViewRaw.classList.remove('active');
+    } else {
+      singleOrigHighlightDisplay.style.display = 'none';
+      if (singleOrigText) singleOrigText.style.display = 'block';
+      if (btnSingleOrigViewHighlight) btnSingleOrigViewHighlight.classList.remove('active');
+      if (btnSingleOrigViewRaw) btnSingleOrigViewRaw.classList.add('active');
+    }
+
+    // Humanized Document Pane
+    if (singleHumanViewMode === 'highlight') {
+      singleHumanHighlightDisplay.innerHTML = renderRiskHighlights(singleHumanText.value, true);
+      singleHumanHighlightDisplay.style.display = 'block';
+      if (singleHumanText) singleHumanText.style.display = 'none';
+      if (btnSingleHumanViewHighlight) btnSingleHumanViewHighlight.classList.add('active');
+      if (btnSingleHumanViewRaw) btnSingleHumanViewRaw.classList.remove('active');
+    } else {
+      singleHumanHighlightDisplay.style.display = 'none';
+      if (singleHumanText) singleHumanText.style.display = 'block';
+      if (btnSingleHumanViewHighlight) btnSingleHumanViewHighlight.classList.remove('active');
+      if (btnSingleHumanViewRaw) btnSingleHumanViewRaw.classList.add('active');
+    }
+  };
+
+  if (chkSingleHighlight) {
+    chkSingleHighlight.addEventListener('change', () => {
+      isSingleHighlightActive = chkSingleHighlight.checked;
+      if (singleHighlightPill) {
+        singleHighlightPill.innerText = isSingleHighlightActive ? 'ON' : 'OFF';
+        if (isSingleHighlightActive) {
+          singleHighlightPill.classList.remove('off');
+        } else {
+          singleHighlightPill.classList.add('off');
+        }
+      }
+      if (singleHighlightLegend) {
+        if (isSingleHighlightActive) {
+          singleHighlightLegend.classList.remove('disabled');
+        } else {
+          singleHighlightLegend.classList.add('disabled');
+        }
+      }
+      updateSingleHighlightDisplays();
+      showToast(`Document Highlighter ${isSingleHighlightActive ? 'Activated' : 'Disabled'}`, 'info');
+    });
+  }
+
+  if (btnSingleOrigViewHighlight) {
+    btnSingleOrigViewHighlight.addEventListener('click', () => {
+      singleOrigViewMode = 'highlight';
+      updateSingleHighlightDisplays();
+    });
+  }
+  if (btnSingleOrigViewRaw) {
+    btnSingleOrigViewRaw.addEventListener('click', () => {
+      singleOrigViewMode = 'raw';
+      updateSingleHighlightDisplays();
+    });
+  }
+  if (btnSingleHumanViewHighlight) {
+    btnSingleHumanViewHighlight.addEventListener('click', () => {
+      singleHumanViewMode = 'highlight';
+      updateSingleHighlightDisplays();
+    });
+  }
+  if (btnSingleHumanViewRaw) {
+    btnSingleHumanViewRaw.addEventListener('click', () => {
+      singleHumanViewMode = 'raw';
+      updateSingleHighlightDisplays();
+    });
+  }
+
+  if (btnCopySinglePreview && singleHumanText) {
+    btnCopySinglePreview.addEventListener('click', async () => {
+      if (!singleHumanText.value) return;
+      try {
+        await navigator.clipboard.writeText(singleHumanText.value);
+        showToast('Humanized document text copied to clipboard!', 'success');
+      } catch (_) {
+        singleHumanText.select();
+        document.execCommand('copy');
+        showToast('Text copied!', 'success');
+      }
+    });
+  }
 
   const setSingleFile = (file) => {
     singleFile = file;
@@ -705,6 +958,19 @@ document.addEventListener('DOMContentLoaded', () => {
         btnDownloadSingleDocx.href = `/api/download/${data.token}`;
         btnDownloadSingleDocx.download = data.filename;
         singleResultMeta.innerText = `Original: ${data.metadata.original_words} words → Humanized: ${data.metadata.humanized_words} words (${data.metadata.changes_count} enhancements).`;
+
+        // Render document preview with High/Medium/Low Risk Highlights
+        const origPreview = data.metadata.original_preview || '';
+        const humanPreview = data.metadata.humanized_preview || '';
+        if (singleOrigText) singleOrigText.value = origPreview;
+        if (singleHumanText) singleHumanText.value = humanPreview;
+        updateSingleStats(origPreview, singleOrigStats);
+        updateSingleStats(humanPreview, singleHumanStats);
+
+        singleOrigViewMode = 'highlight';
+        singleHumanViewMode = 'highlight';
+        updateSingleHighlightDisplays();
+
         singleResultArea.style.display = 'block';
 
       } catch (err) {
@@ -746,127 +1012,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnInputViewRaw = document.getElementById('btnInputViewRaw');
   const btnOutputViewHighlight = document.getElementById('btnOutputViewHighlight');
   const btnOutputViewRaw = document.getElementById('btnOutputViewRaw');
-
-  // Comprehensive AI Detection & Plagiarism Trigger Patterns
-  const HIGH_RISK_PATTERNS = [
-    /\bdelve into\b/gi, /\bdelving into\b/gi, /\bintricate tapestry\b/gi, /\brich tapestry\b/gi,
-    /\btapestry of\b/gi, /\bparadigm shift\b/gi, /\bplay a pivotal role\b/gi, /\bplays a pivotal role\b/gi,
-    /\bpivotal role\b/gi, /\bserves as a testament to\b/gi, /\ba testament to\b/gi,
-    /\bnavigating the complexities\b/gi, /\bnavigating the landscape\b/gi, /\binterplay between\b/gi,
-    /\bunderscores the importance\b/gi, /\bfoster an environment\b/gi, /\bmultifaceted\b/gi,
-    /\bever-evolving landscape\b/gi, /\bat the forefront of\b/gi, /\ba myriad of\b/gi,
-    /\bseamlessly integrated\b/gi, /\bprofound implications\b/gi, /\bintricate dance\b/gi,
-    /\bin conclusion\b/gi, /\bfurthermore\b/gi, /\bmoreover\b/gi, /\bit is crucial to\b/gi,
-    /\bit is crucial to note that\b/gi, /\bit is important to note that\b/gi, /\bit is important to remember that\b/gi,
-    /\bit is essential to\b/gi, /\bharness the power of\b/gi, /\bgame-changer\b/gi, /\bto summarize\b/gi
-  ];
-
-  const MEDIUM_RISK_PATTERNS = [
-    /\badditionally\b/gi, /\bconsequently\b/gi, /\bsubsequently\b/gi, /\bnotably\b/gi,
-    /\bparamount\b/gi, /\bvital role\b/gi, /\bprofound impact\b/gi, /\bcomprehensive understanding\b/gi,
-    /\bit can be observed that\b/gi, /\bit is evident that\b/gi, /\bit is undeniable that\b/gi,
-    /\bit is worth noting that\b/gi, /\bit is worth noting\b/gi, /\butilize\b/gi, /\butilizes\b/gi,
-    /\butilizing\b/gi, /\bfacilitate\b/gi, /\bfacilitates\b/gi, /\bdemonstrates\b/gi,
-    /\bdemonstrate\b/gi, /\belucidate\b/gi, /\bexpedite\b/gi, /\bendeavor\b/gi,
-    /\bendeavors\b/gi, /\bubiquitous\b/gi, /\bdetrimental\b/gi, /\badvantageous\b/gi,
-    /\btechnological revolution\b/gi, /\bin modern society\b/gi, /\bin today's fast-paced world\b/gi,
-    /\bunderscores\b/gi, /\bfosters\b/gi, /\bever-evolving\b/gi, /\bseamlessly\b/gi,
-    /\bshed light on\b/gi, /\bserves as a reminder\b/gi, /\bvibrant\b/gi, /\bbustling\b/gi
-  ];
-
-  const LOW_RISK_PATTERNS = [
-    /\bin fact\b/gi, /\bas we can see\b/gi, /\bkeep in mind\b/gi, /\btruth be told\b/gi,
-    /\bnaturally\b/gi, /\bclearly\b/gi, /\bto put it simply\b/gi, /\bessentially\b/gi,
-    /\bfor instance\b/gi, /\bon the other hand\b/gi, /\blooking closer\b/gi, /\bworth pointing out\b/gi,
-    /\bwhat stands out\b/gi, /\bin plain terms\b/gi, /\bnotice that\b/gi, /\bexploring\b/gi,
-    /\bexamine\b/gi, /\bdig into\b/gi, /\bhelp explain\b/gi, /\bdigital evolution\b/gi,
-    /\bput to work\b/gi, /\bturning point\b/gi, /\bkey part\b/gi, /\bwe must\b/gi,
-    /\bone has to\b/gi, /\bas a result\b/gi, /\bmajor change\b/gi
-  ];
-
-  const escapeHtml = (str) => {
-    return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  };
-
-  const renderRiskHighlights = (rawText, isOutput = false) => {
-    if (!rawText || !rawText.trim()) {
-      return isOutput
-        ? '<span class="highlight-placeholder">Paraphrased passage with neutralized markers will appear here...</span>'
-        : '<span class="highlight-placeholder">Paste draft or synthesized text here... (Click to edit &amp; scan for markers)</span>';
-    }
-
-    const matches = [];
-
-    // Red patterns (High Risk)
-    HIGH_RISK_PATTERNS.forEach(pat => {
-      let m;
-      pat.lastIndex = 0;
-      while ((m = pat.exec(rawText)) !== null) {
-        matches.push({ start: m.index, end: m.index + m[0].length, type: 'red', text: m[0] });
-      }
-    });
-
-    // Yellow patterns (Medium Risk)
-    MEDIUM_RISK_PATTERNS.forEach(pat => {
-      let m;
-      pat.lastIndex = 0;
-      while ((m = pat.exec(rawText)) !== null) {
-        matches.push({ start: m.index, end: m.index + m[0].length, type: 'yellow', text: m[0] });
-      }
-    });
-
-    // Green patterns (Low Risk / Humanized Cadence)
-    LOW_RISK_PATTERNS.forEach(pat => {
-      let m;
-      pat.lastIndex = 0;
-      while ((m = pat.exec(rawText)) !== null) {
-        matches.push({ start: m.index, end: m.index + m[0].length, type: 'green', text: m[0] });
-      }
-    });
-
-    // Sort matches by start position, longer match first if same start
-    matches.sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
-
-    // Eliminate overlapping match boundaries
-    const nonOverlapping = [];
-    let lastEnd = 0;
-    for (const m of matches) {
-      if (m.start >= lastEnd) {
-        nonOverlapping.push(m);
-        lastEnd = m.end;
-      }
-    }
-
-    let resultHtml = '';
-    let cursor = 0;
-    for (const m of nonOverlapping) {
-      if (m.start > cursor) {
-        resultHtml += escapeHtml(rawText.substring(cursor, m.start));
-      }
-
-      // If output pane, any neutralized phrase or human cadence shows in green
-      const displayType = (isOutput && (m.type === 'yellow' || m.type === 'red')) ? 'green' : m.type;
-      const tooltip = displayType === 'red'
-        ? 'High Plagiarism/AI Flag (Turnitin & GPTZero Trigger)'
-        : (displayType === 'yellow'
-          ? 'Medium AI Predictability Pattern'
-          : 'Low Risk: Verified Natural Human Cadence');
-
-      resultHtml += `<span class="ai-marker-highlight mark-${displayType}" data-tooltip="${tooltip}">${escapeHtml(m.text)}</span>`;
-      cursor = m.end;
-    }
-
-    if (cursor < rawText.length) {
-      resultHtml += escapeHtml(rawText.substring(cursor));
-    }
-
-    return resultHtml;
-  };
 
   let isHighlightActive = true;
   let inputViewMode = 'highlight'; // 'highlight' or 'raw'

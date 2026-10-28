@@ -492,9 +492,75 @@
                 <div class="success-banner-title">Document Ready</div>
                 <div id="singleResultMeta" class="success-banner-sub"></div>
               </div>
-              <a id="btnDownloadSingleDocx" class="btn-success" href="#" target="_blank">
-                <span>Download Word Document (.docx)</span>
-              </a>
+              <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <button type="button" class="btn-secondary" id="btnCopySinglePreview" title="Copy humanized text">📋 Copy Text</button>
+                <a id="btnDownloadSingleDocx" class="btn-success" href="#" target="_blank">
+                  <span>Download Word Document (.docx)</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- Single Document Plagiarism & AI Risk Scanner Controls -->
+            <div class="highlight-controls-bar" style="margin-top: 20px;">
+              <div class="highlight-toggle-wrap">
+                <span class="highlight-toggle-label">Plagiarism & AI Risk Scanner:</span>
+                <label class="switch-control" title="Toggle AI Plagiarism Markers Highlighting">
+                  <input type="checkbox" id="chkSingleHighlight" checked>
+                  <span class="switch-slider"></span>
+                </label>
+                <span class="switch-status-pill" id="singleHighlightPill">ON</span>
+              </div>
+
+              <!-- Color Legend Chips -->
+              <div class="highlight-legend" id="singleHighlightLegend">
+                <div class="legend-chip legend-red" title="Words heavily flagged by Turnitin & GPTZero">
+                  <span class="legend-dot red"></span>
+                  <span>High Risk (Plagiarism/AI Flag)</span>
+                </div>
+                <div class="legend-chip legend-yellow" title="Common transitional AI patterns">
+                  <span class="legend-dot yellow"></span>
+                  <span>Medium Risk (Predictable AI)</span>
+                </div>
+                <div class="legend-chip legend-green" title="Human sentence variance and verified cadence">
+                  <span class="legend-dot green"></span>
+                  <span>Low Risk (Verified Human Flow)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Single Document Side-by-Side Preview Panes -->
+            <div class="editor-workspace">
+              <!-- Left: Original Passage -->
+              <div class="editor-pane">
+                <div class="editor-pane-header">
+                  <span class="editor-pane-title">Original Document Passage</span>
+                  <div class="pane-view-toggle">
+                    <button type="button" class="view-chip active" id="btnSingleOrigViewHighlight">🔍 Highlights</button>
+                    <button type="button" class="view-chip" id="btnSingleOrigViewRaw">📄 Raw Text</button>
+                  </div>
+                  <span class="editor-pane-counter" id="singleOrigStats">0 words • 0 chars</span>
+                </div>
+                <div class="editor-pane-body">
+                  <textarea class="editor-area" id="singleOrigText" readonly placeholder="Original document text preview..."></textarea>
+                  <div class="editor-area-highlight" id="singleOrigHighlightDisplay"></div>
+                </div>
+              </div>
+
+              <!-- Right: Humanized Passage -->
+              <div class="editor-pane">
+                <div class="editor-pane-header">
+                  <span class="editor-pane-title" style="color: var(--color-success);">Humanized Document Passage</span>
+                  <div class="pane-view-toggle">
+                    <button type="button" class="view-chip active" id="btnSingleHumanViewHighlight">🔍 Highlights</button>
+                    <button type="button" class="view-chip" id="btnSingleHumanViewRaw">📋 Raw Text</button>
+                  </div>
+                  <span class="editor-pane-counter" id="singleHumanStats">0 words • 0 chars</span>
+                </div>
+                <div class="editor-pane-body">
+                  <textarea class="editor-area" id="singleHumanText" readonly placeholder="Humanized document text preview..."></textarea>
+                  <div class="editor-area-highlight" id="singleHumanHighlightDisplay"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

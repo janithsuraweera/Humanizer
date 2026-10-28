@@ -229,7 +229,9 @@ class DocumentProcessor:
             "original_words": len(orig_str.split()),
             "humanized_words": len(human_str.split()),
             "changes_count": len(total_changes),
-            "sample_changes": total_changes[:10]
+            "sample_changes": total_changes[:10],
+            "original_preview": orig_str[:35000],
+            "humanized_preview": human_str[:35000]
         }
 
         return out_bytes, metrics
@@ -278,7 +280,9 @@ class DocumentProcessor:
             "page_count": len(reader.pages),
             "original_words": len(raw_text.split()),
             "humanized_words": len(humanized_text.split()),
-            "changes_count": len(proc_res["changes"])
+            "changes_count": len(proc_res["changes"]),
+            "original_preview": raw_text[:35000],
+            "humanized_preview": humanized_text[:35000]
         }
 
         return docx_bytes, txt_bytes, metrics

@@ -276,7 +276,9 @@ async def api_upload_document(
             meta = {
                 "original_words": len(text.split()),
                 "humanized_words": len(proc["text"].split()),
-                "changes_count": len(proc["changes"])
+                "changes_count": len(proc["changes"]),
+                "original_preview": text[:35000],
+                "humanized_preview": proc["text"][:35000]
             }
         else:
             raise HTTPException(status_code=400, detail=f"Unsupported format: {ext}. Supported: .docx, .pdf, .txt, .md")
