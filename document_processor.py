@@ -4,6 +4,7 @@ Handles DOCX, PDF, TXT, and Markdown files with style and structure preservation
 Supports multi-file batch processing with ZIP bundling.
 """
 
+import asyncio
 import io
 import os
 import zipfile
@@ -61,15 +62,19 @@ class DocumentProcessor:
         humanized_paragraphs = []
         all_changes = []
 
-        for p_strip in paragraphs:
-            res = await engine.humanize(
+        tasks = [
+            engine.humanize(
                 p_strip,
                 mode=mode,
                 intensity=intensity,
-                provider=provider,
-                api_key=api_key,
+                provider="local" if len(p_strip.split()) < 12 else provider,
+                api_key=api_key if len(p_strip.split()) >= 12 else None,
                 skip_metrics=True
             )
+            for p_strip in paragraphs
+        ]
+        results = await asyncio.gather(*tasks)
+        for res in results:
             humanized_paragraphs.append(res["humanized_text"])
             all_changes.extend(res.get("changes_applied", []))
 
@@ -99,37 +104,52 @@ class DocumentProcessor:
         humanized_full_text = []
         total_changes = []
 
+        para_tasks = []
+        para_metadata = []
+
         for para in source_doc.paragraphs:
             text = para.text.strip()
             if not text:
+                para_metadata.append(("empty", "", ""))
+                continue
+
+            style_name = para.style.name if para.style else "Normal"
+            is_heading = "heading" in style_name.lower() or "title" in style_name.lower()
+            
+            # Headings or short snippets (< 12 words) use local engine for sub-millisecond speed
+            effective_provider = "local" if (is_heading or len(text.split()) < 12) else provider
+            
+            para_metadata.append(("heading" if is_heading else "para", style_name, text))
+            para_tasks.append(
+                engine.humanize(
+                    text,
+                    mode="academic" if is_heading else mode,
+                    intensity=40 if is_heading else intensity,
+                    provider=effective_provider,
+                    api_key=api_key if effective_provider != "local" else None,
+                    skip_metrics=True
+                )
+            )
+
+        # Execute all paragraphs concurrently in parallel
+        processed_results = await asyncio.gather(*para_tasks)
+        res_iter = iter(processed_results)
+
+        for p_type, style_name, orig_text in para_metadata:
+            if p_type == "empty":
                 out_doc.add_paragraph()
                 continue
 
-            original_full_text.append(text)
-
-            # Check if this paragraph is a heading
-            style_name = para.style.name if para.style else "Normal"
-            is_heading = "heading" in style_name.lower() or "title" in style_name.lower()
-
-            if is_heading:
-                # For headings, apply minimal light polish without aggressive restructuring
-                res = await engine.humanize(text, mode="academic", intensity=40, provider="local", skip_metrics=True)
-                humanized_text = res["humanized_text"]
-                out_para = out_doc.add_heading(humanized_text, level=1 if "1" in style_name else 2)
-            else:
-                res = await engine.humanize(
-                    text,
-                    mode=mode,
-                    intensity=intensity,
-                    provider=provider,
-                    api_key=api_key,
-                    skip_metrics=True
-                )
-                humanized_text = res["humanized_text"]
-                total_changes.extend(res.get("changes_applied", []))
-                out_para = out_doc.add_paragraph(humanized_text)
-
+            original_full_text.append(orig_text)
+            res = next(res_iter)
+            humanized_text = res["humanized_text"]
+            total_changes.extend(res.get("changes_applied", []))
             humanized_full_text.append(humanized_text)
+
+            if p_type == "heading":
+                out_doc.add_heading(humanized_text, level=1 if "1" in style_name else 2)
+            else:
+                out_doc.add_paragraph(humanized_text)
 
         # Also handle tables if present
         for table in source_doc.tables:

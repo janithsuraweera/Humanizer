@@ -251,33 +251,127 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const createProgressTicker = (fillEl, statusEl, statusMessages) => {
-    let percent = 15;
-    fillEl.style.width = '15%';
-    fillEl.classList.add('active');
+    const isSingle = fillEl.id && fillEl.id.startsWith('single');
+    const prefix = isSingle ? 'single' : 'batch';
+
+    const ringFill = document.getElementById(`${prefix}RingFill`);
+    const percentText = document.getElementById(`${prefix}PercentText`);
+    const matrixStatus = document.getElementById(`${prefix}MatrixStatus`);
+    const taskTitle = document.getElementById(`${prefix}TaskTitle`);
+    const stagePill = document.getElementById(`${prefix}StagePill`);
+
+    const step1 = document.getElementById(`${prefix}Step1`);
+    const step2 = document.getElementById(`${prefix}Step2`);
+    const step3 = document.getElementById(`${prefix}Step3`);
+    const step4 = document.getElementById(`${prefix}Step4`);
+
+    const conn1 = document.getElementById(`${prefix}Conn1`);
+    const conn2 = document.getElementById(`${prefix}Conn2`);
+    const conn3 = document.getElementById(`${prefix}Conn3`);
+
+    const setStepState = (stepEl, state) => {
+      if (!stepEl) return;
+      stepEl.classList.remove('pending', 'active', 'completed');
+      stepEl.classList.add(state);
+    };
+
+    const updateMatrixUI = (p) => {
+      if (percentText) percentText.innerText = `${p}%`;
+      if (ringFill) {
+        // Circumference for r=18 is ~113.1
+        const offset = Math.max(0, 113.1 * (1 - p / 100));
+        ringFill.style.strokeDashoffset = offset;
+      }
+
+      if (p < 25) {
+        setStepState(step1, 'active');
+        setStepState(step2, 'pending');
+        setStepState(step3, 'pending');
+        setStepState(step4, 'pending');
+        if (conn1) conn1.style.width = `${Math.min(100, (p / 25) * 100)}%`;
+        if (conn2) conn2.style.width = '0%';
+        if (conn3) conn3.style.width = '0%';
+        if (stagePill) stagePill.innerText = 'STAGE 1 / 4';
+        if (taskTitle) taskTitle.innerText = isSingle ? 'Ingesting Manuscript Structure...' : 'Extracting Document Batch...';
+      } else if (p < 55) {
+        setStepState(step1, 'completed');
+        setStepState(step2, 'active');
+        setStepState(step3, 'pending');
+        setStepState(step4, 'pending');
+        if (conn1) conn1.style.width = '100%';
+        if (conn2) conn2.style.width = `${Math.min(100, ((p - 25) / 30) * 100)}%`;
+        if (conn3) conn3.style.width = '0%';
+        if (stagePill) stagePill.innerText = 'STAGE 2 / 4';
+        if (taskTitle) taskTitle.innerText = 'Neural Forensic Pattern Scan...';
+      } else if (p < 85) {
+        setStepState(step1, 'completed');
+        setStepState(step2, 'completed');
+        setStepState(step3, 'active');
+        setStepState(step4, 'pending');
+        if (conn1) conn1.style.width = '100%';
+        if (conn2) conn2.style.width = '100%';
+        if (conn3) conn3.style.width = `${Math.min(100, ((p - 55) / 30) * 100)}%`;
+        if (stagePill) stagePill.innerText = 'STAGE 3 / 4';
+        if (taskTitle) taskTitle.innerText = 'Sculpting Natural Human Cadence...';
+      } else {
+        setStepState(step1, 'completed');
+        setStepState(step2, 'completed');
+        setStepState(step3, 'completed');
+        setStepState(step4, 'active');
+        if (conn1) conn1.style.width = '100%';
+        if (conn2) conn2.style.width = '100%';
+        if (conn3) conn3.style.width = '100%';
+        if (stagePill) stagePill.innerText = 'STAGE 4 / 4';
+        if (taskTitle) taskTitle.innerText = isSingle ? 'Packaging Clean Word Document (.docx)...' : 'Packaging Archive (.zip)...';
+      }
+    };
+
+    let percent = 14;
+    fillEl.style.width = '14%';
+    updateMatrixUI(percent);
     let msgIndex = 0;
-    if (statusEl) statusEl.innerText = statusMessages[0];
+    if (statusEl && statusMessages && statusMessages[0]) {
+      statusEl.innerText = statusMessages[0];
+    }
+    if (matrixStatus) matrixStatus.innerText = 'NEURAL ENGINE ACTIVE';
 
     const timer = setInterval(() => {
-      if (percent < 90) {
-        percent += Math.floor(Math.random() * 8) + 4;
-        if (percent > 90) percent = 90;
+      if (percent < 92) {
+        percent += Math.floor(Math.random() * 6) + 3;
+        if (percent > 92) percent = 92;
         fillEl.style.width = `${percent}%`;
+        updateMatrixUI(percent);
       }
       msgIndex++;
-      if (statusEl && statusMessages[msgIndex]) {
+      if (statusEl && statusMessages && statusMessages[msgIndex]) {
         statusEl.innerText = statusMessages[msgIndex];
       }
-    }, 600);
+    }, 450);
 
     return {
       stop: (success, finalMsg) => {
         clearInterval(timer);
-        fillEl.classList.remove('active');
         if (success) {
           fillEl.style.width = '100%';
-          if (statusEl) statusEl.innerText = finalMsg || 'Completed successfully!';
+          updateMatrixUI(100);
+          setStepState(step1, 'completed');
+          setStepState(step2, 'completed');
+          setStepState(step3, 'completed');
+          setStepState(step4, 'completed');
+          if (conn1) conn1.style.width = '100%';
+          if (conn2) conn2.style.width = '100%';
+          if (conn3) conn3.style.width = '100%';
+          if (stagePill) stagePill.innerText = 'COMPLETE';
+          if (matrixStatus) matrixStatus.innerText = 'TRANSFORMATION READY';
+          if (taskTitle) taskTitle.innerText = isSingle ? 'Manuscript Ready for Download!' : 'Batch Archive Ready!';
+          if (statusEl) statusEl.innerText = finalMsg || 'Document humanized successfully!';
         } else {
           fillEl.style.width = '0%';
+          if (percentText) percentText.innerText = '0%';
+          if (ringFill) ringFill.style.strokeDashoffset = 113.1;
+          if (stagePill) stagePill.innerText = 'FAILED';
+          if (matrixStatus) matrixStatus.innerText = 'PROCESSING HALTED';
+          if (taskTitle) taskTitle.innerText = 'Pipeline Interrupted';
           if (statusEl) statusEl.innerText = finalMsg || 'Processing failed.';
         }
       }
@@ -309,7 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (settings.apiKey) formData.append('api_key', settings.apiKey);
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 120000);
+      const timeoutId = setTimeout(() => controller.abort(), 180000);
 
       try {
         const res = await fetch('/api/upload-batch', {
@@ -355,7 +449,9 @@ document.addEventListener('DOMContentLoaded', () => {
         batchResultsArea.style.display = 'block';
 
       } catch (err) {
-        const msg = err.name === 'AbortError' ? 'Request timed out. Please try a smaller document.' : err.message;
+        const msg = err.name === 'AbortError' 
+          ? 'Network timeout. If using cloud APIs (Gemini/Groq), try switching to "Local Offline Engine" which is instant and unlimited.' 
+          : err.message;
         ticker.stop(false, 'Processing failed.');
         showToast(`Error: ${msg}`, 'error');
       } finally {
@@ -364,7 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           batchProgressContainer.style.display = 'none';
           batchProgressFill.style.width = '0%';
-        }, 1500);
+        }, 2200);
       }
     });
   }
@@ -431,6 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!singleFile) return;
 
       btnStartSingle.disabled = true;
+      singleResultArea.style.display = 'none';
       singleProgressContainer.style.display = 'block';
       const ticker = createProgressTicker(singleProgressFill, singleStatusText, [
         'Extracting document text & headings...',
@@ -448,7 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (settings.apiKey) formData.append('api_key', settings.apiKey);
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 120000);
+      const timeoutId = setTimeout(() => controller.abort(), 180000);
 
       try {
         const res = await fetch('/api/upload-document', {
@@ -478,7 +575,9 @@ document.addEventListener('DOMContentLoaded', () => {
         singleResultArea.style.display = 'block';
 
       } catch (err) {
-        const msg = err.name === 'AbortError' ? 'Request timed out. Please try a smaller document.' : err.message;
+        const msg = err.name === 'AbortError' 
+          ? 'Network timeout. If using cloud APIs (Gemini/Groq), try switching to "Local Offline Engine" which is instant and unlimited.' 
+          : err.message;
         ticker.stop(false, 'Processing failed.');
         showToast(`Error: ${msg}`, 'error');
       } finally {
@@ -487,7 +586,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           singleProgressContainer.style.display = 'none';
           singleProgressFill.style.width = '0%';
-        }, 1500);
+        }, 2200);
       }
     });
   }

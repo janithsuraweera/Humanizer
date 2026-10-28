@@ -142,9 +142,126 @@
             </div>
           </div>
 
-          <!-- Progress Bar -->
-          <div class="progress-container" id="batchProgressContainer">
-            <div class="progress-fill" id="batchProgressFill"></div>
+          <!-- Neural Transformation Matrix (Batch Progress System) -->
+          <div class="process-matrix-card" id="batchProgressContainer">
+            <div class="matrix-header">
+              <div class="matrix-header-main">
+                <div class="matrix-orbit-box">
+                  <svg class="matrix-ring-svg" viewBox="0 0 44 44">
+                    <circle class="ring-bg" cx="22" cy="22" r="18"></circle>
+                    <circle class="ring-fill" id="batchRingFill" cx="22" cy="22" r="18" stroke="url(#batchRingGrad)"></circle>
+                    <defs>
+                      <linearGradient id="batchRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#6366f1" />
+                        <stop offset="50%" stop-color="#06b6d4" />
+                        <stop offset="100%" stop-color="#10b981" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div class="matrix-percent-text" id="batchPercentText">0%</div>
+                </div>
+
+                <div class="matrix-header-info">
+                  <div class="matrix-status-badge">
+                    <span class="matrix-status-dot"></span>
+                    <span class="matrix-status-label" id="batchMatrixStatus">BATCH ENGINE ACTIVE</span>
+                  </div>
+                  <div class="matrix-task-title" id="batchTaskTitle">Transforming Document Batch...</div>
+                  <div class="matrix-task-sub" id="batchStatusText">Initializing batch pipeline...</div>
+                </div>
+              </div>
+
+              <div class="matrix-header-meta">
+                <span class="matrix-stage-pill" id="batchStagePill">STAGE 1 / 4</span>
+                <span class="matrix-speed-tag">⚡ 2,000x BOOST</span>
+              </div>
+            </div>
+
+            <!-- 4-Stage Stepper Track -->
+            <div class="matrix-stepper">
+              <div class="matrix-step active" id="batchStep1" data-step="1">
+                <div class="step-indicator">
+                  <span class="step-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                  </span>
+                  <span class="step-check">✓</span>
+                </div>
+                <div class="step-label-group">
+                  <span class="step-title">Ingestion</span>
+                  <span class="step-desc">Text Extraction</span>
+                </div>
+              </div>
+
+              <div class="step-connector">
+                <div class="connector-fill" id="batchConn1"></div>
+              </div>
+
+              <div class="matrix-step pending" id="batchStep2" data-step="2">
+                <div class="step-indicator">
+                  <span class="step-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polygon points="16.2 7.8 13.6 12 9.4 14.6 12 10.4 16.2 7.8"></polygon>
+                    </svg>
+                  </span>
+                  <span class="step-check">✓</span>
+                </div>
+                <div class="step-label-group">
+                  <span class="step-title">Forensic Scan</span>
+                  <span class="step-desc">AI Markers</span>
+                </div>
+              </div>
+
+              <div class="step-connector">
+                <div class="connector-fill" id="batchConn2"></div>
+              </div>
+
+              <div class="matrix-step pending" id="batchStep3" data-step="3">
+                <div class="step-indicator">
+                  <span class="step-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"></path>
+                    </svg>
+                  </span>
+                  <span class="step-check">✓</span>
+                </div>
+                <div class="step-label-group">
+                  <span class="step-title">Humanize</span>
+                  <span class="step-desc">Burstiness & Flow</span>
+                </div>
+              </div>
+
+              <div class="step-connector">
+                <div class="connector-fill" id="batchConn3"></div>
+              </div>
+
+              <div class="matrix-step pending" id="batchStep4" data-step="4">
+                <div class="step-indicator">
+                  <span class="step-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </span>
+                  <span class="step-check">✓</span>
+                </div>
+                <div class="step-label-group">
+                  <span class="step-title">ZIP Archive</span>
+                  <span class="step-desc">Word Packaging</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Laser Bar -->
+            <div class="matrix-laser-track">
+              <div class="matrix-laser-bar" id="batchProgressFill">
+                <div class="laser-flare"></div>
+              </div>
+            </div>
           </div>
 
           <div style="display: flex; gap: 14px; margin-top: 22px; align-items: center; flex-wrap: wrap;">
@@ -241,15 +358,132 @@
             </div>
           </div>
 
-          <div class="progress-container" id="singleProgressContainer">
-            <div class="progress-fill" id="singleProgressFill"></div>
+          <!-- Neural Transformation Matrix (Single Document Progress System) -->
+          <div class="process-matrix-card" id="singleProgressContainer">
+            <div class="matrix-header">
+              <div class="matrix-header-main">
+                <div class="matrix-orbit-box">
+                  <svg class="matrix-ring-svg" viewBox="0 0 44 44">
+                    <circle class="ring-bg" cx="22" cy="22" r="18"></circle>
+                    <circle class="ring-fill" id="singleRingFill" cx="22" cy="22" r="18" stroke="url(#singleRingGrad)"></circle>
+                    <defs>
+                      <linearGradient id="singleRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#6366f1" />
+                        <stop offset="50%" stop-color="#06b6d4" />
+                        <stop offset="100%" stop-color="#10b981" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div class="matrix-percent-text" id="singlePercentText">0%</div>
+                </div>
+
+                <div class="matrix-header-info">
+                  <div class="matrix-status-badge">
+                    <span class="matrix-status-dot"></span>
+                    <span class="matrix-status-label" id="singleMatrixStatus">NEURAL CORE ACTIVE</span>
+                  </div>
+                  <div class="matrix-task-title" id="singleTaskTitle">Humanizing Manuscript...</div>
+                  <div class="matrix-task-sub" id="singleStatusText">Initializing document extraction pipeline...</div>
+                </div>
+              </div>
+
+              <div class="matrix-header-meta">
+                <span class="matrix-stage-pill" id="singleStagePill">STAGE 1 / 4</span>
+                <span class="matrix-speed-tag">⚡ 2,000x BOOST</span>
+              </div>
+            </div>
+
+            <!-- 4-Stage Stepper Track -->
+            <div class="matrix-stepper">
+              <div class="matrix-step active" id="singleStep1" data-step="1">
+                <div class="step-indicator">
+                  <span class="step-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                  </span>
+                  <span class="step-check">✓</span>
+                </div>
+                <div class="step-label-group">
+                  <span class="step-title">Ingestion</span>
+                  <span class="step-desc">Text Extraction</span>
+                </div>
+              </div>
+
+              <div class="step-connector">
+                <div class="connector-fill" id="singleConn1"></div>
+              </div>
+
+              <div class="matrix-step pending" id="singleStep2" data-step="2">
+                <div class="step-indicator">
+                  <span class="step-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polygon points="16.2 7.8 13.6 12 9.4 14.6 12 10.4 16.2 7.8"></polygon>
+                    </svg>
+                  </span>
+                  <span class="step-check">✓</span>
+                </div>
+                <div class="step-label-group">
+                  <span class="step-title">Forensic Scan</span>
+                  <span class="step-desc">AI Markers</span>
+                </div>
+              </div>
+
+              <div class="step-connector">
+                <div class="connector-fill" id="singleConn2"></div>
+              </div>
+
+              <div class="matrix-step pending" id="singleStep3" data-step="3">
+                <div class="step-indicator">
+                  <span class="step-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"></path>
+                    </svg>
+                  </span>
+                  <span class="step-check">✓</span>
+                </div>
+                <div class="step-label-group">
+                  <span class="step-title">Humanize</span>
+                  <span class="step-desc">Burstiness & Flow</span>
+                </div>
+              </div>
+
+              <div class="step-connector">
+                <div class="connector-fill" id="singleConn3"></div>
+              </div>
+
+              <div class="matrix-step pending" id="singleStep4" data-step="4">
+                <div class="step-indicator">
+                  <span class="step-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </span>
+                  <span class="step-check">✓</span>
+                </div>
+                <div class="step-label-group">
+                  <span class="step-title">Synthesis</span>
+                  <span class="step-desc">Word Document</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Laser Bar -->
+            <div class="matrix-laser-track">
+              <div class="matrix-laser-bar" id="singleProgressFill">
+                <div class="laser-flare"></div>
+              </div>
+            </div>
           </div>
 
           <div style="display: flex; gap: 14px; margin-top: 22px; align-items: center; flex-wrap: wrap;">
             <button class="btn-primary" id="btnStartSingle">
               <span>Humanize Document</span>
             </button>
-            <span id="singleStatusText" style="font-size: 0.88rem; color: var(--text-secondary); font-weight: 500;"></span>
           </div>
 
           <div id="singleResultArea" style="display: none; margin-top: 24px;">

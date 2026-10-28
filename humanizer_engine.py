@@ -271,7 +271,7 @@ class HumanizerEngine:
                         "topP": 0.95
                     }
                 }
-                async with httpx.AsyncClient(timeout=30.0) as client:
+                async with httpx.AsyncClient(timeout=7.0) as client:
                     for m in models_to_try:
                         url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={api_key}"
                         try:
@@ -283,8 +283,11 @@ class HumanizerEngine:
                                     parts = candidates[0].get("content", {}).get("parts", [])
                                     if parts:
                                         return parts[0].get("text", "").strip()
+                            elif resp.status_code in [429, 403, 401]:
+                                # Rate limited or bad auth - fall back immediately without hanging
+                                break
                         except Exception:
-                            continue
+                            break
             
             elif provider == "groq":
                 # Groq Free Cloud API

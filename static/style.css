@@ -1142,3 +1142,398 @@ body {
   color: var(--text-primary);
   margin: 14px 0 6px 0;
 }
+
+/* ==========================================================================
+   FUTURISTIC NEURAL TRANSFORMATION MATRIX CARD (Advanced Progress System)
+   ========================================================================== */
+
+.process-matrix-card {
+  display: none;
+  position: relative;
+  margin: 24px 0 16px 0;
+  padding: 24px 26px;
+  background: linear-gradient(135deg, rgba(20, 24, 38, 0.95) 0%, rgba(13, 17, 28, 0.98) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 14px 38px -6px rgba(0, 0, 0, 0.6), 0 0 28px rgba(99, 102, 241, 0.16);
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+  animation: matrixAppear 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+[data-theme="light"] .process-matrix-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-color: rgba(99, 102, 241, 0.22);
+  box-shadow: 0 14px 32px -6px rgba(99, 102, 241, 0.12), 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.process-matrix-card::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -20%;
+  width: 140%;
+  height: 200%;
+  background: radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+@keyframes matrixAppear {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header Section */
+.matrix-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 2;
+}
+
+.matrix-header-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 260px;
+}
+
+/* Orbital Circular SVG Gauge */
+.matrix-orbit-box {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+}
+
+.matrix-ring-svg {
+  width: 54px;
+  height: 54px;
+  transform: rotate(-90deg);
+  filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5));
+}
+
+.ring-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 3.5;
+}
+
+[data-theme="light"] .ring-bg {
+  stroke: rgba(0, 0, 0, 0.08);
+}
+
+.ring-fill {
+  fill: none;
+  stroke-width: 3.8;
+  stroke-linecap: round;
+  stroke-dasharray: 113.1;
+  stroke-dashoffset: 113.1;
+  transition: stroke-dashoffset 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.matrix-percent-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+/* Header Info */
+.matrix-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.matrix-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.12);
+  padding: 3px 9px;
+  border-radius: 9999px;
+  border: 1px solid rgba(99, 102, 241, 0.26);
+}
+
+.matrix-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981;
+  animation: matrixPulse 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes matrixPulse {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  100% { transform: scale(1.25); opacity: 1; }
+}
+
+.matrix-task-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.matrix-task-sub {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Header Meta / Badges */
+.matrix-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.matrix-stage-pill {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(99, 102, 241, 0.18);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  letter-spacing: 0.02em;
+}
+
+.matrix-speed-tag {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.14);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.28);
+}
+
+/* Middle Stepper Pipeline */
+.matrix-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 22px 0 18px 0;
+  position: relative;
+  z-index: 2;
+}
+
+.matrix-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.step-indicator {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 1.8px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  position: relative;
+  transition: all 260ms ease;
+  flex-shrink: 0;
+}
+
+.step-check {
+  display: none;
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.step-label-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.step-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 250ms ease;
+}
+
+.step-desc {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 250ms ease;
+}
+
+/* Stepper States */
+.matrix-step.pending .step-indicator {
+  opacity: 0.6;
+}
+
+.matrix-step.active .step-indicator {
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.22);
+  color: #a5b4fc;
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.55), inset 0 0 8px rgba(99, 102, 241, 0.3);
+  animation: stepGlow 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes stepGlow {
+  0% { transform: scale(1); box-shadow: 0 0 12px rgba(99, 102, 241, 0.4); }
+  100% { transform: scale(1.08); box-shadow: 0 0 20px rgba(99, 102, 241, 0.7); }
+}
+
+.matrix-step.active .step-title {
+  color: #818cf8;
+}
+
+.matrix-step.active .step-desc {
+  color: var(--text-secondary);
+}
+
+.matrix-step.completed .step-indicator {
+  border-color: #10b981;
+  background: #10b981;
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.45);
+}
+
+.matrix-step.completed .step-icon {
+  display: none;
+}
+
+.matrix-step.completed .step-check {
+  display: block;
+}
+
+.matrix-step.completed .step-title {
+  color: #10b981;
+}
+
+.matrix-step.completed .step-desc {
+  color: #34d399;
+}
+
+/* Stepper Connectors */
+.step-connector {
+  flex: 0.5;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+  min-width: 14px;
+}
+
+[data-theme="light"] .step-connector {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.connector-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #6366f1, #10b981);
+  transition: width 280ms ease;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.7);
+}
+
+/* Bottom Laser Progress Track */
+.matrix-laser-track {
+  height: 8px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 9999px;
+  position: relative;
+  overflow: visible;
+  margin-top: 16px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+  z-index: 2;
+}
+
+[data-theme="light"] .matrix-laser-track {
+  background: rgba(0, 0, 0, 0.07);
+}
+
+.matrix-laser-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #6366f1 0%, #06b6d4 50%, #10b981 100%);
+  border-radius: 9999px;
+  transition: width 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  box-shadow: 0 0 14px rgba(6, 182, 212, 0.65);
+}
+
+.laser-flare {
+  position: absolute;
+  right: -5px;
+  top: -4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 12px 3px #06b6d4, 0 0 22px 6px rgba(99, 102, 241, 0.8);
+  animation: laserFlarePulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes laserFlarePulse {
+  0% { transform: scale(0.9); opacity: 0.85; }
+  100% { transform: scale(1.2); opacity: 1; }
+}
+
+/* Responsive tweaks for smaller screens */
+@media (max-width: 768px) {
+  .process-matrix-card {
+    padding: 18px 16px;
+  }
+  .matrix-stepper {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .step-connector {
+    display: none;
+  }
+  .matrix-step {
+    flex: 1 1 45%;
+  }
+  .matrix-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
