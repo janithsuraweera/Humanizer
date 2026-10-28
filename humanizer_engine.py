@@ -127,16 +127,16 @@ CONTRACTIONS = [
     (r'\bWe are\b', "We're"),
 ]
 
-# Natural human parentheticals injected strategically for burstiness
+# Natural human parentheticals injected strategically for burstiness (strictly without em-dashes)
 HUMAN_PARENTHETICALS = [
-    "— at least in practice —",
-    "— and with good reason —",
-    "— to a significant degree —",
-    "— as many observers note —",
-    "— for better or worse —",
+    ", at least in practice,",
+    ", and with good reason,",
+    ", to a significant degree,",
+    ", as many observers note,",
+    ", for better or worse,",
     "(and this matters)",
-    "— in most circumstances —",
-    "— as one might expect —",
+    ", in most circumstances,",
+    ", as one might expect,",
 ]
 
 class HumanizerEngine:
@@ -144,22 +144,26 @@ class HumanizerEngine:
         pass
 
     def clean_glitches(self, text: str) -> str:
-        """Removes punctuation glitches, stuttering words, and double marks."""
-        # Double punctuation like ,, or .. or --
+        """Removes punctuation glitches, em-dashes, stuttering words, and double marks."""
+        # 1. Attached em-dash or en-dash between words: "word—word" or "word–word" -> "word, word"
+        text = re.sub(r'(?<=[a-zA-Z0-9])\s*[—–]\s*(?=[a-zA-Z0-9])', ', ', text)
+        # 2. Spaced em-dash, en-dash, double hyphen or spaced hyphen: " — ", " – ", " -- ", " - "
+        text = re.sub(r'\s+[-—–]{1,3}\s+', ', ', text)
+        # 3. Any remaining standalone em-dash or en-dash
+        text = re.sub(r'[—–]', ' ', text)
+
+        # 4. Double punctuation like ,, or .. or --
         text = re.sub(r'([,\.?!;:])\s*([,\.?!;:])+', r'\1', text)
-        # Spaces before punctuation
+        # 5. Spaces before punctuation
         text = re.sub(r'\s+([,\.?!;:])', r'\1', text)
-        # Multiple spaces
+        # 6. Clean comma right before another punctuation or vice versa (e.g. ", ." or ", ;")
+        text = re.sub(r'\s*,\s*([\.?!;:])', r'\1', text)
+        text = re.sub(r'([\.?!;:])\s*,', r'\1', text)
+        # 7. Multiple spaces
         text = re.sub(r'[ \t]{2,}', ' ', text)
-        # Double dashes
-        text = re.sub(r'—\s*—+', '—', text)
-        text = re.sub(r'–\s*–+', '–', text)
-        # Orphaned dashes before periods like "–." or "—."
-        text = re.sub(r'[—–-]\s*\.', '.', text)
-        text = re.sub(r'[—–-]\s*,', ',', text)
-        # Clean repetitive words (e.g. "matters matters", "the the")
+        # 8. Clean repetitive words (e.g. "matters matters", "the the")
         text = re.sub(r'\b([A-Za-z]+)\s+\1\b', r'\1', text, flags=re.IGNORECASE)
-        # Capitalize start of sentences
+        # 9. Capitalize start of sentences
         text = re.sub(r'(^|[.?!]\s+)([a-z])', lambda m: m.group(1) + m.group(2).upper(), text)
         return text.strip()
 
@@ -212,13 +216,13 @@ class HumanizerEngine:
             words = current.split()
 
             # If current sentence and next sentence are both medium length (~10-18 words),
-            # occasionally join them using em-dash or semicolon
+            # occasionally join them using smooth natural conjunctions (strictly no dashes)
             if (i + 1 < len(sentences) and 
                 9 <= len(words) <= 18 and 
                 9 <= len(sentences[i + 1].split()) <= 18 and 
                 random.random() < (intensity / 140.0)):
                 
-                connector = random.choice([" — ", "; in fact, ", " — particularly as ", "; consequently, "])
+                connector = random.choice([", and in fact, ", "; in fact, ", ", particularly as ", ", and consequently, "])
                 next_sent = sentences[i + 1].strip()
                 # Lowercase the first character of the joined sentence
                 if next_sent and next_sent[0].isupper() and not next_sent.startswith("I "):
@@ -250,10 +254,11 @@ class HumanizerEngine:
             "Your sole mission is to rewrite the provided text so that it reads 100% naturally written by a human. "
             "CRITICAL INSTRUCTIONS:\n"
             "1. Eradicate all AI markers: NEVER use 'Furthermore', 'Moreover', 'In conclusion', 'Delve into', 'Tapestry', 'Testament to', 'Pivotal role', 'Underscores', or 'Navigating the landscape'.\n"
-            "2. Enforce extreme burstiness: mix punchy 4-word sentences with rich 28-word explanatory sentences with em-dashes and varied punctuation.\n"
-            "3. Use active voice, natural idiomatic cadence, and appropriate contractions.\n"
-            "4. Preserve all facts, data, statistics, references, technical terms, and core meaning exactly.\n"
-            "5. Return ONLY the humanized text with no preamble or commentary."
+            "2. Enforce extreme burstiness: mix punchy 4-word sentences with natural 18-28 word explanatory sentences.\n"
+            "3. STRICT PROHIBITION ON DASHES: NEVER use em-dashes (—), en-dashes (–), or decorative dashes ( - ). Use standard commas, semicolons, parentheses, or separate sentences instead. Em-dashes are AI dead giveaways.\n"
+            "4. Use active voice, natural idiomatic cadence, and appropriate contractions.\n"
+            "5. Preserve all facts, data, statistics, references, technical terms, and core meaning exactly.\n"
+            "6. Return ONLY the humanized text with no preamble or commentary."
         )
 
         try:
